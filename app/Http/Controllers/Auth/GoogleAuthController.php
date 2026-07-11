@@ -46,7 +46,7 @@ class GoogleAuthController extends Controller
             Auth::login($user);
             $user->updateLastLogin();
 
-            return redirect()->intended('/agrinex-dashboard');
+            return redirect()->intended('/');
 
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Google OAuth Error: ' . $e->getMessage());

@@ -27,11 +27,7 @@ use App\Http\Controllers\Web\ReportsController;
 |--------------------------------------------------------------------------
 */
 
-// Public Routes
-// Welcome Page (Redirect to dashboard which requires login)
-Route::get('/', function () {
-    return redirect()->route('agrinex.dashboard');
-})->name('welcome');
+// Public Utility Pages (Accessible without login)
 
 // Public Utility Pages (Accessible without login)
 Route::get('/system-monitor', [DashboardController::class, 'monitor'])->name('monitor');
@@ -51,8 +47,8 @@ Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback']);
 Route::middleware(['auth'])->group(function () {
     
     // AgriNex Main Dashboard (with charts and real-time data)
-    Route::get('/agrinex-dashboard', [AgriNexDashboardController::class, 'index'])->name('agrinex.dashboard');
-    Route::get('/agrinex-dashboard/node/{id}', [AgriNexDashboardController::class, 'nodeDetail'])->name('agrinex.node-detail');
+    Route::get('/', [AgriNexDashboardController::class, 'index'])->name('agrinex.dashboard');
+    Route::get('/node/{id}', [AgriNexDashboardController::class, 'nodeDetail'])->name('agrinex.node-detail');
 
     Route::middleware(['role'])->group(function () {
 

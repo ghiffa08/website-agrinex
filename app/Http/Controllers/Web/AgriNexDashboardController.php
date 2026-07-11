@@ -14,7 +14,7 @@ class AgriNexDashboardController extends Controller
      */
     public function index()
     {
-        return view('welcome-neumorphism', [
+        return view('welcome', [
             'pageTitle' => 'AgriNex Dashboard - IoT Smart Agriculture System',
             'pageDescription' => 'Real-time monitoring and control for smart irrigation system'
         ]);

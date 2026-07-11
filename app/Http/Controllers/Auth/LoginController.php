@@ -16,7 +16,7 @@ class LoginController extends Controller
     public function showLoginForm()
     {
         if (Auth::check()) {
-            return redirect()->route('dashboard');
+            return redirect()->route('agrinex.dashboard');
         }
         
         return view('auth.login');
@@ -83,7 +83,7 @@ class LoginController extends Controller
      */
     protected function redirectBasedOnRole(User $user)
     {
-        $intendedUrl = session()->pull('url.intended', route('dashboard'));
+        $intendedUrl = session()->pull('url.intended', route('agrinex.dashboard'));
         
         // Admin and Operator can access everything
         if ($user->isAdmin() || $user->isOperator()) {
@@ -92,10 +92,10 @@ class LoginController extends Controller
 
         // Viewer can only view, redirect to dashboard
         if ($user->isViewer()) {
-            return redirect()->route('dashboard');
+            return redirect()->route('agrinex.dashboard');
         }
 
         // Default redirect
-        return redirect()->route('dashboard');
+        return redirect()->route('agrinex.dashboard');
     }
 }
