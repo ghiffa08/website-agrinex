@@ -6,7 +6,7 @@
     @include('partials.dashboard-scripts')
 </head>
 
-<body x-data="dashboard()" x-init="initDashboard()"
+<body x-data="dashboard()" x-init="initData()"
     class="h-full min-h-screen w-full bg-neuBg text-darkText font-sans antialiased selection:bg-brand selection:text-white relative overflow-x-hidden">
 
     <div class="min-h-screen w-full bg-neuBg font-sans text-darkText">
