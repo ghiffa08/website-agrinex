@@ -2,15 +2,36 @@
 
 namespace App\Services;
 
-use App\Models\GetdataLog;
-use App\Models\SensorWeatherData;
-use App\Models\SensorNodeData;
-use App\Models\NodeLog;
+use App\Repositories\Contracts\DeviceRepositoryInterface;
+use App\Repositories\Contracts\SensorDataRepositoryInterface;
+use App\Repositories\Contracts\WeatherDataRepositoryInterface;
+use App\Repositories\Contracts\SessionRepositoryInterface;
+use App\Repositories\Contracts\LogRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class SensorDataService
 {
+    protected $deviceRepo;
+    protected $sensorRepo;
+    protected $weatherRepo;
+    protected $sessionRepo;
+    protected $logRepo;
+
+    public function __construct(
+        DeviceRepositoryInterface $deviceRepo,
+        SensorDataRepositoryInterface $sensorRepo,
+        WeatherDataRepositoryInterface $weatherRepo,
+        SessionRepositoryInterface $sessionRepo,
+        LogRepositoryInterface $logRepo
+    ) {
+        $this->deviceRepo = $deviceRepo;
+        $this->sensorRepo = $sensorRepo;
+        $this->weatherRepo = $weatherRepo;
+        $this->sessionRepo = $sessionRepo;
+        $this->logRepo = $logRepo;
+    }
+
     public function processSensorData(array $requestData)
     {
         $metadata = $requestData['metadata'];
@@ -25,14 +46,14 @@ class SensorDataService
             // 1. Insert getdata_logs
             if (!empty($data['getdata_logs'])) {
                 foreach ($data['getdata_logs'] as $log) {
-                    GetdataLog::create(array_merge($log, [
+                    $this->sessionRepo->createGetdataLog(array_merge($log, [
                         'created_at' => now(),
                         'updated_at' => now()
                     ]));
 
                     // Auto-register master node if it doesn't exist
                     if (isset($log['node_id'])) {
-                        \App\Models\Node::firstOrCreate(
+                        $this->deviceRepo->firstOrCreateNode(
                             ['node_id' => $log['node_id']],
                             [
                                 'group' => 'A',
@@ -49,7 +70,7 @@ class SensorDataService
             // 2. Insert sensor_weather_data
             if (!empty($data['sensor_weather_data'])) {
                 foreach ($data['sensor_weather_data'] as $weather) {
-                    SensorWeatherData::create(array_merge($weather, [
+                    $this->weatherRepo->createSensorWeatherRecord(array_merge($weather, [
                         'sesi_id_getdata' => $sesiId
                     ]));
                 }
@@ -59,12 +80,12 @@ class SensorDataService
             // 3. Insert sensor_node_data
             if (!empty($data['sensor_node_data'])) {
                 foreach ($data['sensor_node_data'] as $node) {
-                    SensorNodeData::create(array_merge($node, [
+                    $this->sensorRepo->createSensorNodeRecord(array_merge($node, [
                         'sesi_id_getdata' => $sesiId
                     ]));
 
                     // Auto-register master node if it doesn't exist
-                    \App\Models\Node::firstOrCreate(
+                    $this->deviceRepo->firstOrCreateNode(
                         ['node_id' => $node['node_id']],
                         [
                             'group' => 'A',
@@ -80,7 +101,7 @@ class SensorDataService
             // 4. Insert node_logs
             if (!empty($data['node_logs'])) {
                 foreach ($data['node_logs'] as $nodeLog) {
-                    NodeLog::create($nodeLog);
+                    $this->logRepo->createNodeLog($nodeLog);
                 }
                 $insertedCounts['node_logs'] = count($data['node_logs']);
             }
@@ -101,63 +122,19 @@ class SensorDataService
 
     public function getSensorData($filters = [])
     {
-        $query = SensorNodeData::query();
-
-        if (!empty($filters['sesi_id'])) {
-            $query->where('sesi_id_getdata', $filters['sesi_id']);
-        }
-
-        if (!empty($filters['node_id'])) {
-            $query->where('node_id', $filters['node_id']);
-        }
-
-        $orderBy = $filters['order_by'] ?? 'received_at';
-        $orderDir = $filters['order_dir'] ?? 'desc';
-        $limit = $filters['limit'] ?? 100;
-
-        return $query->orderBy($orderBy, $orderDir)
-            ->limit($limit)
-            ->get();
+        return $this->sensorRepo->getHistory($filters, $filters['limit'] ?? 100);
     }
 
     public function getStatistics($sesiId = null)
     {
-        $query = SensorNodeData::query();
-
-        if ($sesiId) {
-            $query->where('sesi_id_getdata', $sesiId);
-        }
-
-        return [
-            'total_readings' => $query->count(),
-            'avg_temperature' => round($query->avg('temp_c'), 2),
-            'avg_soil_moisture' => round($query->avg('soil_pct'), 2),
-            'avg_voltage' => round($query->avg('voltage_v'), 2),
-            'min_temperature' => $query->min('temp_c'),
-            'max_temperature' => $query->max('temp_c'),
-            'nodes_count' => $query->distinct('node_id')->count('node_id'),
-        ];
+        return $this->sensorRepo->getStatistics($sesiId);
     }
 
     public function getLatestReadings($nodeId = null)
     {
-        $query = SensorNodeData::query();
-
         if ($nodeId) {
-            return $query->where('node_id', $nodeId)
-                ->latest('received_at')
-                ->first();
+            return $this->sensorRepo->getLatestForNode($nodeId);
         }
-
-        // Get latest reading for each node
-        return $query->select('node_id')
-            ->selectRaw('MAX(received_at) as latest_reading')
-            ->groupBy('node_id')
-            ->get()
-            ->map(function ($item) {
-                return SensorNodeData::where('node_id', $item->node_id)
-                    ->where('received_at', $item->latest_reading)
-                    ->first();
-            });
+        return $this->sensorRepo->getLatestForDevices();
     }
 }

@@ -5,13 +5,30 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use App\Models\Device;
-use App\Models\SensorData;
-use App\Models\DeviceLog;
-use App\Models\DataSession;
+use App\Repositories\Contracts\DeviceRepositoryInterface;
+use App\Repositories\Contracts\SessionRepositoryInterface;
+use App\Repositories\Contracts\SensorDataRepositoryInterface;
+use App\Repositories\Contracts\LogRepositoryInterface;
 
 class TelemetryApiController extends Controller
 {
+    protected $deviceRepo;
+    protected $sessionRepo;
+    protected $sensorRepo;
+    protected $logRepo;
+
+    public function __construct(
+        DeviceRepositoryInterface $deviceRepo,
+        SessionRepositoryInterface $sessionRepo,
+        SensorDataRepositoryInterface $sensorRepo,
+        LogRepositoryInterface $logRepo
+    ) {
+        $this->deviceRepo = $deviceRepo;
+        $this->sessionRepo = $sessionRepo;
+        $this->sensorRepo = $sensorRepo;
+        $this->logRepo = $logRepo;
+    }
+
     /**
      * Handle incoming telemetry data from ESP32 LoRa Gateway.
      */
@@ -41,31 +58,26 @@ class TelemetryApiController extends Controller
             $sessionId = (int) $validated['session_id'];
 
             // ── 2. Auto-register device if not yet known ────────────────────
-            $deviceExists = Device::where('id', $nodeId)->exists();
-            if (!$deviceExists) {
-                Log::info("[Telemetry] Auto-registering new device_id={$nodeId}");
-                Device::create([
-                    'id'             => $nodeId,
+            $this->deviceRepo->firstOrCreateDevice(
+                ['id' => $nodeId],
+                [
                     'group'          => 'A',
                     'kode_perlakuan' => 'P' . $nodeId,
                     'lokasi'         => 'Otomatis dari API',
                     'keterangan'     => "Device {$nodeId} didaftarkan otomatis oleh ESP32",
-                ]);
-            }
-
-            // ── 2b. Auto-register session if not yet known ──────────────────
-            $session = DataSession::firstOrCreate(
-                ['session_id' => $sessionId],
-                [
-                    'started_at'    => now(),
-                    'success_count' => 0,
-                    'failed_count'  => 0,
                 ]
             );
+
+            // ── 2b. Auto-register session if not yet known ──────────────────
+            $session = $this->sessionRepo->findOrCreateSession($sessionId, [
+                'started_at'    => now(),
+                'success_count' => 0,
+                'failed_count'  => 0,
+            ]);
             $sessionDbId = $session->id;
 
             // ── 3. Insert into sensor_data ─────────────────────────────
-            $sensorRecord = SensorData::create([
+            $sensorRecord = $this->sensorRepo->createSensorRecord([
                 'data_session_id'         => $sessionDbId,
                 'device_id'               => $nodeId,
                 'voltage_v'               => $validated['voltage'] ?? null,
@@ -83,7 +95,7 @@ class TelemetryApiController extends Controller
             ]);
 
             // ── 4. Log into device_logs ────────────────────────────────────────
-            DeviceLog::create([
+            $this->logRepo->createDeviceLog([
                 'device_id'      => $nodeId,
                 'rssi_dbm'       => $validated['rssi'] ?? null,
                 'snr_db'         => null,

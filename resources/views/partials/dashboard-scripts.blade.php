@@ -210,6 +210,17 @@
             fetchError: false,
             lastUpdated: null,
             devices: [],
+            get groupedDevices() {
+                const groups = {};
+                this.devices.forEach(d => {
+                    const groupName = d.lahan_pantau_name || 'Unassigned';
+                    if (!groups[groupName]) {
+                        groups[groupName] = [];
+                    }
+                    groups[groupName].push(d);
+                });
+                return groups;
+            },
             weatherSummary: {},
             forecastEntries: [],
             forecast24h: [],
@@ -281,7 +292,7 @@
                     icon: '🚚'
                 },
                 idle: {
-                    bg: 'bg-gradient-to-b from-gray-50 to-gray-100 dark:from-slate-800/80 dark:to-slate-700/80 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-white/5',
+                    bg: 'bg-gradient-to-b from-gray-50 to-gray-100 text-gray-700 border border-gray-200',
                     icon: '➖'
                 },
             },
@@ -641,7 +652,7 @@
             },
             getCardTheme(key) {
                 // Unified theme
-                return 'hover:border-emerald-200 dark:hover:border-emerald-900/50';
+                return 'hover:border-emerald-200:border-emerald-900/50';
             },
             getCardGradient(key) {
                 // Unified subtle gradient
@@ -2920,12 +2931,27 @@
                     }, 800);
                 });
 
-                // Auto refresh setiap 60 detik - hanya jika tidak sedang loading
+                // Pseudo-realtime polling every 15 seconds (optimized for professional IoT dashboards)
+                // This is extremely optimized: the API endpoints use Cache::remember()
+                // meaning 90% of requests hit RAM/File Cache instead of MySQL database.
+                // We also check document.hidden so we don't poll when the tab is inactive!
                 setInterval(() => {
-                    if (!this.loadingAll) {
-                        this.loadAll();
+                    // Only poll if tab is active and not currently loading
+                    if (!document.hidden && !this.loadingAll && !this.loadingDevices) {
+                        this.loadDevices(); // Update perangkat
+                        this.loadTank(); // Update data tangki
                     }
-                }, 60000);
+                }, 15000);
+
+                // Update charts and tasks every 2 minutes
+                setInterval(() => {
+                    // Only poll if tab is active
+                    if (!document.hidden && !this.loadingAll) {
+                        this.loadWeather();
+                        this.loadUsage();
+                        this.loadUsageDaily();
+                    }
+                }, 120000);
 
                 // Clock tick
                 this.tickClock();

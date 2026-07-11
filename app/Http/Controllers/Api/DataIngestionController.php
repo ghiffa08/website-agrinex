@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Services\SensorDataService;
 use App\Services\IrrigationService;
-use App\Models\JsonBackup;
+use App\Repositories\Contracts\JsonBackupRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -14,13 +14,16 @@ class DataIngestionController extends Controller
 {
     protected $sensorDataService;
     protected $irrigationService;
+    protected $backupRepo;
 
     public function __construct(
         SensorDataService $sensorDataService,
-        IrrigationService $irrigationService
+        IrrigationService $irrigationService,
+        JsonBackupRepositoryInterface $backupRepo
     ) {
         $this->sensorDataService = $sensorDataService;
         $this->irrigationService = $irrigationService;
+        $this->backupRepo = $backupRepo;
     }
 
     /**
@@ -63,7 +66,7 @@ class DataIngestionController extends Controller
             $statistics = $requestData['statistics'] ?? [];
             $recordsByTable = $statistics['records_by_table'] ?? [];
             
-            JsonBackup::create([
+            $this->backupRepo->createBackup([
                 'sesi_id_getdata' => $request->input('metadata.sesi_id_getdata'),
                 'json_data' => $requestData,
                 'data_size_kb' => $dataSizeKb,
@@ -144,7 +147,7 @@ class DataIngestionController extends Controller
             $statistics = $requestData['statistics'] ?? [];
             $recordsByTable = $statistics['records_by_table'] ?? [];
             
-            $backup = JsonBackup::create([
+            $backup = $this->backupRepo->createBackup([
                 'sesi_id_getdata' => $request->input('metadata.sesi_id_irrigate'),
                 'json_data' => $requestData,
                 'data_size_kb' => $dataSizeKb,
@@ -231,7 +234,7 @@ class DataIngestionController extends Controller
             $statistics = $requestData['statistics'] ?? [];
             $sessions = $statistics['sessions'] ?? [];
             
-            $backup = JsonBackup::create([
+            $backup = $this->backupRepo->createBackup([
                 'sesi_id_getdata' => $sessions[0] ?? $request->input('metadata.node_id'),
                 'json_data' => $requestData,
                 'data_size_kb' => $dataSizeKb,

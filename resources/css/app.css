@@ -11,4 +11,10 @@
     --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
     --font-mono: 'DM Mono', ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+
+    /* Neumorphism Design Tokens */
+    --color-neuBg: #E0E5EC;
+    --color-brand: #00D26A;
+    --color-darkText: #314051;
+    --color-lightText: #93A1B2;
 }

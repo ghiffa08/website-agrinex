@@ -30,4 +30,9 @@ class Device extends Model
     {
         return $this->hasMany(DeviceLog::class);
     }
+
+    public function lahanPantau()
+    {
+        return $this->belongsTo(LahanPantau::class);
+    }
 }

@@ -31,7 +31,7 @@ Route::prefix('v1')->group(function () {
     });
     
     // Dashboard Endpoints (NEW - for web dashboard)
-    Route::prefix('dashboard')->group(function () {
+    Route::prefix('dashboard')->middleware(['throttle:polling'])->group(function () {
         Route::get('/devices', [DashboardApiController::class, 'getDevices']);
         Route::get('/tank', [DashboardApiController::class, 'getTank']);
         Route::get('/schedule', [DashboardApiController::class, 'getSchedule']);
@@ -77,9 +77,10 @@ Route::prefix('v1')->group(function () {
 Route::get('/bmkg/forecast', [WeatherController::class, 'getForecast']);
 
 // Device-specific endpoints (untuk detail pages)
-Route::prefix('devices/{deviceId}')->group(function () {
+Route::prefix('devices/{deviceId}')->middleware(['throttle:polling'])->group(function () {
     Route::get('/irrigation/sessions', [DeviceController::class, 'getIrrigationSessions']);
     Route::get('/usage-history', [DeviceController::class, 'getUsageHistory']);
+    Route::get('/chart-data', [DeviceController::class, 'getChartData']);
 });
 
 

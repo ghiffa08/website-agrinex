@@ -102,8 +102,8 @@ class DashboardController extends Controller
         
         return response()->json([
             'labels' => $labels,
-            'soil_moisture' => $sensorData->pluck('soil_pct'),
-            'soil_temperature' => $sensorData->pluck('temp_c'),
+            'soil_moisture' => $sensorData->pluck('soil_moisture'),
+            'soil_temperature' => $sensorData->pluck('temperature'),
             'air_temperature' => $weatherData->pluck('temp_c'),
             'air_humidity' => $weatherData->pluck('humidity_pct'),
         ]);
@@ -122,8 +122,8 @@ class DashboardController extends Controller
             return [
                 'node_id' => $node->id,
                 'node_code' => $node->id,
-                'soil_moisture' => $latestData?->soil_pct,
-                'temperature' => $latestData?->temp_c,
+                'soil_moisture' => $latestData?->soil_moisture,
+                'temperature' => $latestData?->temperature,
                 'last_reading' => $latestData?->recorded_at,
             ];
         });
@@ -190,7 +190,7 @@ class DashboardController extends Controller
         
         // Check for low soil moisture
         $lowMoisture = SensorData::where('recorded_at', '>=', Carbon::now()->subHours(24))
-            ->where('soil_pct', '<', 30)
+            ->where('soil_moisture', '<', 30)
             ->latest('recorded_at')
             ->limit(3)
             ->get();
@@ -198,7 +198,7 @@ class DashboardController extends Controller
         foreach ($lowMoisture as $reading) {
             $alerts[] = (object)[
                 'severity' => 'critical',
-                'message' => "Low soil moisture on Device {$reading->device_id} ({$reading->soil_pct}%)",
+                'message' => "Low soil moisture on Device {$reading->device_id} ({$reading->soil_moisture}%)",
                 'timestamp' => $reading->recorded_at,
             ];
         }

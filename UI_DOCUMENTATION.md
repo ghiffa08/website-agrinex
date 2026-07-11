@@ -83,20 +83,39 @@ Routes:
 
 ## 4. Components and responsibilities
 
-High-level UI components:
+The main dashboard (`http://localhost:8000/agrinex-dashboard` via `welcome-modular-fix.blade.php`) uses a modular component architecture. The components and their responsibilities include:
 
-- Header / Navigation (partial)
-- Dashboard Charts (Chart-FIX): responsibility to initialize Chart.js instances and update them with API data
-- Weekly Tasks (component): shows 24h forecast summary and week view based on BMKG proxy `GET /api/bmkg/forecast`
-- Node Table / Reports: paginated table of `sensor_node_data` or `sensor_weather_data` and export button linking to export endpoints
-- PWA registration block: registers service worker (only when `sw.js` present)
+**App Shell & Navigation:**
+- `components.sidebar`: Responsive navigation menu (sticky icon rail on desktop, slide-over overlay on mobile).
+- `components.header`: Sticky top bar containing search, language toggle, dark mode toggle, notifications, and user profile dropdown.
+- `components.bottom-nav`: Mobile-specific sticky bottom navigation bar.
 
-Important JS responsibilities (in `dashboard()` Alpine object):
-- Load devices/
-- Load tank & plan
-- Build and update charts
-- Load current weather and forecast via `loadBMKGDirect()` which calls `/api/bmkg/forecast`
-- Build week view (`processForecast`) and current tasks
+**Dashboard Widgets & Panels:**
+- `components.weather-summary`: Displays current location weather (temperature, humidity, rainfall, wind speed).
+- `components.devices-tank`: Interactive list of device nodes grouped by area ("Lahan Pantau"). Shows connectivity state, soil moisture, and temperature. Clicking a node navigates to its detail page.
+- `components.water-tank`: Visual representation of water/fertilizer tank capacity using dynamic SVG wave animations and percentage metrics.
+- `components.metrics-cards`: Grid of environmental summary cards using different visualizations:
+  - `gauge`: Circular SVG gauges.
+  - `linear`: Horizontal progress bars.
+  - `plain`: Standard text-based metric display (e.g., for rain drops).
+- `components.environmental-charts`: Historical line charts for tracking temperature, humidity, etc., over time.
+- `components.weekly-tasks`: Shows 24h forecast summary and week view based on BMKG proxy data.
+- `components.usage-charts`: Bar/Area charts estimating fertilizer and water consumption.
+- `components.location-maps`: Map widget displaying the geographic locations of field nodes (e.g., using Leaflet).
+- `components.modals`: Reusable modal dialogs (such as expanded views of metric charts triggered via Alpine events).
+
+**Scripts & Core Behaviors:**
+- `partials.dashboard-scripts`: Contains the Alpine.js `dashboard()` object implementation.
+- `partials.chart-fix`: Initializes and manages `Chart.js` instances, feeding them data from API endpoints.
+- `partials.pwa-scripts` & `components.pwa-components`: Handles Service Worker registration and "Install App" PWA prompts.
+
+**Important JS responsibilities (in `dashboard()` Alpine object):**
+- State management for Sidebar and Dark mode.
+- Fetching and parsing devices (`refreshDevices()`).
+- Fetching tank data.
+- Initializing and updating metrics and charts.
+- Fetching current weather and forecast via `loadBMKGDirect()` which calls `/api/bmkg/forecast`.
+- Generating the weekly view (`processForecast`) and formatting time/dates.
 
 ---
 
@@ -112,4 +131,48 @@ Key endpoints used by the frontend (see `API_DOCUMENTATION.md` for API-level det
 - Export routes (if present): e.g. `GET /reports/export?node=1&type=csv` or similar (check route names in `routes/web.php`)
 
 Payload expectations (frontend):
-- BMKG proxy must return `{
+- BMKG proxy must return JSON in the shape `{ entries: [{ datetime, weather_desc, tc, hu, ws, wd, ... }] }` to correctly populate the weekly forecast and tasks UI.
+- Charts data must return time-series data compatible with Chart.js, typically containing keys like `temperature`, `humidity`, `soil_moisture`, etc.
+- Device objects require properties like `connection_state`, `soil_moisture_pct`, `air_temp_c`, and `threshold` to correctly format the device cards.
+
+---
+
+## 6. Frontend build & dev workflow
+
+Currently, the UI is primarily server-rendered Blade templates leveraging Alpine.js and Tailwind CSS (which is often loaded via CDN in development or compiled via Vite/Mix depending on the setup).
+- **Run local server:** `php artisan serve`
+- **Frontend assets:** If Vite is configured, run `npm run dev` to compile Tailwind classes and other assets.
+
+---
+
+## 7. PWA & static assets (manifest, sw.js)
+
+- The UI includes PWA capabilities. A service worker script (`sw.js`) and a web app manifest (`public/manifest.json`) should be present in the `public/` directory.
+- The PWA install prompt is handled manually in Alpine.js (`installPWA()`).
+- Static assets like the background image (`images/background-perkebunan.webp`) must be present to maintain the intended glassmorphism aesthetics.
+
+---
+
+## 8. Troubleshooting & common console messages
+
+- **"Alpine is not defined" / Alpine directives not working**: Ensure `dashboard-scripts.blade.php` is properly included and Alpine.js is loaded exactly once.
+- **Charts not loading or blank**: Inspect the console for `Chart-FIX` errors. Verify that the `/api/v1/dashboard/charts` endpoint is returning HTTP 200 with valid data arrays.
+- **PWA not installing**: Verify that the site is served over HTTPS (or localhost) and that `manifest.json` is correctly linked in `partials/head`.
+
+---
+
+## 9. Debugging checklist (quick commands)
+
+If you make changes to Blade views and they don't appear:
+- Clear view cache: `php artisan view:clear`
+- Clear route cache: `php artisan route:clear`
+- Clear application cache: `php artisan cache:clear`
+
+---
+
+## 10. Contribution notes
+
+When adding new widgets or components to the dashboard:
+1. Always create a new component file inside `resources/views/components/`.
+2. Follow the established **Glassmorphism** design pattern: use `bg-white/70 dark:bg-slate-900/50 backdrop-blur-xl border-0 shadow-sm`.
+3. If new data is required, define a new fetch method inside the `dashboard()` Alpine data object rather than polluting the global scope.

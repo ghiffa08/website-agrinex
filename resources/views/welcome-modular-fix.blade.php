@@ -6,16 +6,10 @@
     @include('partials.dashboard-scripts')
 </head>
 
-<body x-data="dashboard()" x-init="applyPersistedTheme();"
-    class="h-full bg-[#f0f5f0] text-gray-800 dark:bg-[#0b1120] dark:text-slate-100 relative overflow-x-hidden transition-colors duration-500">
+<body x-data="dashboard()"
+    class="h-full bg-[#E0E5EC] relative overflow-x-hidden transition-colors duration-500">
 
-    {{-- ── Fixed background image ── --}}
-    <div class="fixed inset-0 z-0 pointer-events-none">
-        <div class="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-[0.12] dark:opacity-[0.06] transition-opacity duration-700"
-            style="background-image: url('{{ asset('images/background-perkebunan.webp') }}');"></div>
-        {{-- Soft gradient overlay --}}
-        <div class="absolute inset-0 bg-gradient-to-br from-emerald-50/80 via-transparent to-transparent dark:from-emerald-950/20 dark:via-transparent dark:to-transparent"></div>
-    </div>
+    <div class="min-h-screen w-full bg-[#E0E5EC] font-sans text-[#314051] p-4 md:p-8">
 
     {{-- ══════════════════════════════════════════════════
          App Shell: [Sidebar | Main]
@@ -37,12 +31,7 @@
         <div class="flex-1 min-w-0 flex flex-col min-h-screen overflow-x-hidden">
 
             {{-- Sticky frosted header --}}
-            <div class="sticky top-0 z-30 w-full
-                        bg-white/55 dark:bg-[#0b1120]/70
-                        backdrop-blur-2xl
-                        border-b border-white/40 dark:border-white/[0.06]
-                        shadow-sm shadow-black/[0.05]
-                        transition-colors duration-300">
+            <div class="sticky top-0 z-30 w-full bg-[#E0E5EC] shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] transition-colors duration-300">
                 <div class="px-4 md:px-6 xl:px-8">
                     @include('components.header')
                 </div>
@@ -61,9 +50,8 @@
                     </div>
                 </div>
 
-                {{-- Section 2: Lahan + Tank + Metrics --}}
+                {{-- Section 2: Tank + Metrics --}}
                 <div class="mt-5 space-y-5">
-                    @include('components.lahan-pantau')
                     @include('components.water-tank')
                     @include('components.metrics-cards')
                 </div>
@@ -76,7 +64,7 @@
                     @include('components.location-maps')
                 </div>
 
-                <footer class="text-center pt-10 pb-2 text-xs text-gray-400 dark:text-slate-600 font-medium tracking-wide">
+                <footer class="text-center pt-10 pb-2 text-xs text-[#93A1B2] font-medium tracking-wide">
                     &copy; {{ date('Y') }} AgriNex Smart Irrigation
                 </footer>
 
@@ -91,6 +79,8 @@
     @include('components.modals')
     @include('partials.pwa-scripts')
     @include('partials.chart-fix')
+
+    </div>
 
 </body>
 </html>

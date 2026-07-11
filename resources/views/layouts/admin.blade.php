@@ -18,7 +18,7 @@
 </head>
 
 <body x-data="adminLayout()" 
-    class="h-full bg-[#f4f6f9] text-slate-800 dark:bg-slate-900 dark:text-slate-200 transition-colors duration-300 font-sans antialiased">
+    class="h-full bg-[#f4f6f9] text-slate-800 transition-colors duration-300 font-sans antialiased">
 
     <div class="flex h-screen overflow-hidden">
         
@@ -37,7 +37,7 @@
                 {{-- Page Header (Title) --}}
                 @hasSection('header')
                 <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <h1 class="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">@yield('header')</h1>
+                    <h1 class="text-2xl font-bold text-slate-800 tracking-tight">@yield('header')</h1>
                     
                     {{-- Breadcrumbs (optional) --}}
                     @hasSection('breadcrumbs')
@@ -55,7 +55,7 @@
             </main>
 
             {{-- Footer --}}
-            <footer class="mt-auto py-6 px-6 lg:px-8 border-t border-slate-200 dark:border-slate-700/50 flex justify-between items-center text-sm text-slate-500">
+            <footer class="mt-auto py-6 px-6 lg:px-8 border-t border-slate-200 flex justify-between items-center text-sm text-slate-500">
                 <div>
                     Copyright &copy; {{ date('Y') }} <span class="font-semibold text-emerald-600">AgriNex</span>.
                 </div>

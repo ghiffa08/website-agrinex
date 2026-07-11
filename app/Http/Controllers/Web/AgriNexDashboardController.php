@@ -14,9 +14,18 @@ class AgriNexDashboardController extends Controller
      */
     public function index()
     {
-        return view('welcome-modular-fix', [
+        return view('welcome-neumorphism', [
             'pageTitle' => 'AgriNex Dashboard - IoT Smart Agriculture System',
             'pageDescription' => 'Real-time monitoring and control for smart irrigation system'
+        ]);
+    }
+
+    public function nodeDetail($id)
+    {
+        return view('agrinex-node-detail', [
+            'deviceId' => $id,
+            'pageTitle' => 'Node Details - AgriNex',
+            'pageDescription' => 'Detailed view for node monitoring'
         ]);
     }
 }

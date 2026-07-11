@@ -28,7 +28,7 @@ class BmkgWeatherService
                             $entries[] = [
                                 'local_datetime' => $entry['local_datetime'] ?? ($entry['datetime'] ?? null),
                                 't' => $entry['t'] ?? $entry['temperature_c'] ?? null,
-                                'humidity' => $entry['h'] ?? $entry['humidity'] ?? null,
+                                'humidity' => $entry['hu'] ?? $entry['h'] ?? $entry['humidity'] ?? null,
                                 'rain' => $entry['tp'] ?? $entry['rain'] ?? null,
                                 'weather_desc' => $entry['weather_desc'] ?? ($entry['weather'] ?? null),
                                 'weather_icon' => $entry['image'] ?? ($entry['weather_icon'] ?? null),

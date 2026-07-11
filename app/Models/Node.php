@@ -14,6 +14,10 @@ class Node extends Model
         'kode_perlakuan',
         'lokasi',
         'keterangan',
+        'fc_target',
+        'threshold',
+        'image_url',
+        'lahan_pantau_id',
     ];
     
     protected $casts = [
@@ -54,5 +58,10 @@ class Node extends Model
     public function logs()
     {
         return $this->hasMany(NodeLog::class, 'node_id', 'node_id');
+    }
+
+    public function lahanPantau()
+    {
+        return $this->belongsTo(LahanPantau::class);
     }
 }

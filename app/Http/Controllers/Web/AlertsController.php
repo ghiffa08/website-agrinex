@@ -24,7 +24,7 @@ class AlertsController extends Controller
             ->get();
 
         // Get low soil moisture alerts (< 30%)
-        $lowMoisture = SensorData::where('soil_pct', '<', 30)
+        $lowMoisture = SensorData::where('soil_moisture', '<', 30)
             ->where('recorded_at', '>=', now()->subDay())
             ->with('device')
             ->latest('recorded_at')
@@ -32,7 +32,7 @@ class AlertsController extends Controller
             ->get();
 
         // Get high temperature alerts (> 35°C)
-        $highTemp = SensorData::where('temp_c', '>', 35)
+        $highTemp = SensorData::where('temperature', '>', 35)
             ->where('recorded_at', '>=', now()->subDay())
             ->with('device')
             ->latest('recorded_at')
@@ -89,7 +89,7 @@ class AlertsController extends Controller
                 break;
             
             case 'moisture':
-                $alerts = SensorData::where('soil_pct', '<', 30)
+                $alerts = SensorData::where('soil_moisture', '<', 30)
                     ->where('recorded_at', '>=', now()->subDay())
                     ->with('device')
                     ->latest('recorded_at')
@@ -98,7 +98,7 @@ class AlertsController extends Controller
                 break;
             
             case 'temperature':
-                $alerts = SensorData::where('temp_c', '>', 35)
+                $alerts = SensorData::where('temperature', '>', 35)
                     ->where('recorded_at', '>=', now()->subDay())
                     ->with('device')
                     ->latest('recorded_at')

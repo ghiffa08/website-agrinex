@@ -73,8 +73,6 @@
     <link rel="apple-touch-icon" sizes="57x57" href="{{ asset('AgrinexLogo.jpg') }}" />
 @endif
 
-<!-- Preload critical assets -->
-<link rel="preload" href="{{ asset('images/background-perkebunan.webp') }}" as="image">
 
 <!-- Google Fonts: Plus Jakarta Sans + DM Mono -->
 <link rel="preconnect" href="https://fonts.googleapis.com">

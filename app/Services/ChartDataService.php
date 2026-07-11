@@ -2,12 +2,19 @@
 
 namespace App\Services;
 
-use App\Models\GetdataLog;
+use App\Repositories\Contracts\SessionRepositoryInterface;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 
 class ChartDataService
 {
+    protected $sessionRepo;
+
+    public function __construct(SessionRepositoryInterface $sessionRepo)
+    {
+        $this->sessionRepo = $sessionRepo;
+    }
+
     /**
      * Get sensor sessions based on requested timeframe/limit
      */
@@ -18,24 +25,13 @@ class ChartDataService
         return Cache::remember($cacheKey, 300, function () use ($days, $limit) {
             if ($days) {
                 $startTime = Carbon::now()->subDays($days);
-                $sessions = GetdataLog::where('waktu_mulai', '>=', $startTime)
-                    ->with(['sensorWeatherData', 'sensorNodeData'])
-                    ->orderBy('waktu_mulai', 'asc')
-                    ->get();
+                $sessions = $this->sessionRepo->getSessionsInRange($startTime);
             } elseif ($limit) {
-                $sessions = GetdataLog::with(['sensorWeatherData', 'sensorNodeData'])
-                    ->orderBy('waktu_mulai', 'desc')
-                    ->limit($limit)
-                    ->get()
-                    ->reverse();
-                    
+                $sessions = $this->sessionRepo->getSessionsWithLimit($limit);
                 $startTime = $sessions->first() ? Carbon::parse($sessions->first()->waktu_mulai) : Carbon::now();
             } else {
                 $startTime = Carbon::now()->subDays(7);
-                $sessions = GetdataLog::where('waktu_mulai', '>=', $startTime)
-                    ->with(['sensorWeatherData', 'sensorNodeData'])
-                    ->orderBy('waktu_mulai', 'asc')
-                    ->get();
+                $sessions = $this->sessionRepo->getSessionsInRange($startTime);
             }
 
             return [

@@ -30,18 +30,18 @@ class ReportsController extends Controller
         // Sensor Data Statistics
         $sensorStats = [
             'total_readings' => SensorData::whereBetween('recorded_at', [$startDate, $endDate])->count(),
-            'avg_moisture' => SensorData::whereBetween('recorded_at', [$startDate, $endDate])->avg('soil_pct') ?? 0,
-            'avg_temp' => SensorData::whereBetween('recorded_at', [$startDate, $endDate])->avg('temp_c') ?? 0,
-            'min_moisture' => SensorData::whereBetween('recorded_at', [$startDate, $endDate])->min('soil_pct') ?? 0,
-            'max_temp' => SensorData::whereBetween('recorded_at', [$startDate, $endDate])->max('temp_c') ?? 0,
+            'avg_moisture' => SensorData::whereBetween('recorded_at', [$startDate, $endDate])->avg('soil_moisture') ?? 0,
+            'avg_temp' => SensorData::whereBetween('recorded_at', [$startDate, $endDate])->avg('temperature') ?? 0,
+            'min_moisture' => SensorData::whereBetween('recorded_at', [$startDate, $endDate])->min('soil_moisture') ?? 0,
+            'max_temp' => SensorData::whereBetween('recorded_at', [$startDate, $endDate])->max('temperature') ?? 0,
         ];
 
         // Node Activity
         $nodeActivity = SensorData::select(
                 'device_id', 
                 DB::raw('COUNT(*) as reading_count'),
-                DB::raw('AVG(soil_pct) as avg_moisture'),
-                DB::raw('AVG(temp_c) as avg_temp')
+                DB::raw('AVG(soil_moisture) as avg_moisture'),
+                DB::raw('AVG(temperature) as avg_temp')
             )
             ->whereBetween('recorded_at', [$startDate, $endDate])
             ->groupBy('device_id')
@@ -52,10 +52,10 @@ class ReportsController extends Controller
         $dailySummary = SensorData::select(
                 DB::raw('DATE(recorded_at) as date'),
                 DB::raw('COUNT(*) as total_readings'),
-                DB::raw('AVG(soil_pct) as avg_moisture'),
-                DB::raw('AVG(temp_c) as avg_temp'),
-                DB::raw('MIN(soil_pct) as min_moisture'),
-                DB::raw('MAX(temp_c) as max_temp')
+                DB::raw('AVG(soil_moisture) as avg_moisture'),
+                DB::raw('AVG(temperature) as avg_temp'),
+                DB::raw('MIN(soil_moisture) as min_moisture'),
+                DB::raw('MAX(temperature) as max_temp')
             )
             ->whereBetween('recorded_at', [$startDate, $endDate])
             ->groupBy(DB::raw('DATE(recorded_at)'))
@@ -97,9 +97,9 @@ class ReportsController extends Controller
             'total_readings' => SensorData::where('device_id', $nodeId)
                 ->whereBetween('recorded_at', [$startDate, $endDate])->count(),
             'avg_moisture' => SensorData::where('device_id', $nodeId)
-                ->whereBetween('recorded_at', [$startDate, $endDate])->avg('soil_pct'),
+                ->whereBetween('recorded_at', [$startDate, $endDate])->avg('soil_moisture'),
             'avg_temp' => SensorData::where('device_id', $nodeId)
-                ->whereBetween('recorded_at', [$startDate, $endDate])->avg('temp_c'),
+                ->whereBetween('recorded_at', [$startDate, $endDate])->avg('temperature'),
             // Count irrigate sessions that involved this node by checking valve logs
             'irrigation_events' => ValveLog::where('device_id', $nodeId)
                 ->whereBetween('logged_at', [$startDate, $endDate])->count(),
@@ -109,7 +109,7 @@ class ReportsController extends Controller
     }
 
     /**
-     * Export report to CSV
+     * Generate CSV export
      */
     public function export(Request $request)
     {
@@ -158,8 +158,8 @@ class ReportsController extends Controller
                     $row->recorded_at,
                     $row->voltage_v,
                     $row->current_ma,
-                    $row->temp_c,
-                    $row->soil_pct,
+                    $row->temperature,
+                    $row->soil_moisture,
                 ]);
             }
             
