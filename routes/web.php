@@ -48,6 +48,7 @@ Route::middleware(['auth'])->group(function () {
     
     // AgriNex Main Dashboard (with charts and real-time data)
     Route::get('/', [AgriNexDashboardController::class, 'index'])->name('agrinex.dashboard');
+    Route::get('/devices', [AgriNexDashboardController::class, 'devices'])->name('agrinex.devices');
     Route::get('/node/{id}', [AgriNexDashboardController::class, 'nodeDetail'])->name('agrinex.node-detail');
 
     Route::middleware(['role'])->group(function () {

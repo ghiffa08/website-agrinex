@@ -7,10 +7,10 @@
             px-1 py-2">
 
             {{-- Dashboard (Active) --}}
-            <button class="flex flex-col items-center justify-center
+            <a href="{{ route('agrinex.dashboard') }}" class="flex flex-col items-center justify-center
                 w-14 h-12 rounded-xl
-                bg-neuBg shadow-[inset_3px_3px_6px_#a3b1c6,inset_-3px_-3px_6px_#ffffff]
-                text-brand transition-all duration-200 active:scale-90">
+                transition-all duration-200 active:scale-90
+                {{ request()->routeIs('agrinex.dashboard') ? 'bg-neuBg shadow-[inset_3px_3px_6px_#a3b1c6,inset_-3px_-3px_6px_#ffffff] text-brand' : 'text-lightText hover:text-brand active:shadow-[inset_3px_3px_6px_#a3b1c6,inset_-3px_-3px_6px_#ffffff]' }}">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round"
                         d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z
@@ -19,19 +19,18 @@
                         M14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
                 </svg>
                 <span class="text-[9px] font-bold mt-0.5 leading-none">Beranda</span>
-            </button>
+            </a>
 
             {{-- Perangkat --}}
-            <button class="flex flex-col items-center justify-center
+            <a href="{{ route('agrinex.devices') }}" class="flex flex-col items-center justify-center
                 w-14 h-12 rounded-xl
-                text-lightText
-                hover:text-brand active:shadow-[inset_3px_3px_6px_#a3b1c6,inset_-3px_-3px_6px_#ffffff]
-                transition-all duration-200 active:scale-90">
+                transition-all duration-200 active:scale-90
+                {{ request()->routeIs('agrinex.devices') || request()->routeIs('agrinex.node-detail') ? 'bg-neuBg shadow-[inset_3px_3px_6px_#a3b1c6,inset_-3px_-3px_6px_#ffffff] text-brand' : 'text-lightText hover:text-brand active:shadow-[inset_3px_3px_6px_#a3b1c6,inset_-3px_-3px_6px_#ffffff]' }}">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                 </svg>
                 <span class="text-[9px] font-bold mt-0.5 leading-none">Perangkat</span>
-            </button>
+            </a>
 
             {{-- FAB Center --}}
             <button class="w-14 h-14 -mt-6 rounded-2xl bg-neuBg

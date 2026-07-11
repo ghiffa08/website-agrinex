@@ -20,6 +20,14 @@ class AgriNexDashboardController extends Controller
         ]);
     }
 
+    public function devices()
+    {
+        return view('agrinex-devices', [
+            'pageTitle' => 'Devices List - AgriNex',
+            'pageDescription' => 'Monitor all IoT sensor nodes in your system'
+        ]);
+    }
+
     public function nodeDetail($id)
     {
         return view('agrinex-node-detail', [
