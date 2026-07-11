@@ -78,11 +78,9 @@
         </a>
 
         {{-- Perangkat --}}
-        <a href="#"
+        <a href="{{ route('agrinex.devices') }}"
             class="group relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-xl
-                bg-neuBg shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff]
-                text-lightText hover:text-brand
-                hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]
+                {{ request()->routeIs('agrinex.devices') || request()->routeIs('agrinex.node-detail') ? 'bg-neuBg shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand' : 'bg-neuBg shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] text-lightText hover:text-brand hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]' }}
                 transition-all duration-300 active:scale-95"
             title="Perangkat">
             <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
