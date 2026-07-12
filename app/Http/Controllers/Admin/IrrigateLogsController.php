@@ -8,23 +8,25 @@ use Illuminate\Http\Request;
 
 class IrrigateLogsController extends Controller
 {
-    public function index(Request $request)
-    {
-        $query = IrrigateLog::orderBy('waktu_mulai', 'desc');
+       public function index(Request $request)
+       {
+           // FIX N+1: Eager load relations untuk menghindari query berulang di view
+           $query = IrrigateLog::with(['valveLogs', 'nodeLogs'])
+               ->orderBy('waktu_mulai', 'desc');
         
-        // Filter by date range
-        if ($request->has('start_date') && $request->start_date != '') {
-            $query->whereDate('waktu_mulai', '>=', $request->start_date);
-        }
+           // Filter by date range
+           if ($request->has('start_date') && $request->start_date != '') {
+               $query->whereDate('waktu_mulai', '>=', $request->start_date);
+           }
         
-        if ($request->has('end_date') && $request->end_date != '') {
-            $query->whereDate('waktu_mulai', '<=', $request->end_date);
-        }
+           if ($request->has('end_date') && $request->end_date != '') {
+               $query->whereDate('waktu_mulai', '<=', $request->end_date);
+           }
         
-        $logs = $query->paginate(25);
+           $logs = $query->paginate(25);
         
-        return view('admin.irrigate-logs.index', compact('logs'));
-    }
+           return view('admin.irrigate-logs.index', compact('logs'));
+       }
     
     public function show($id)
     {

@@ -8,10 +8,12 @@ class GetdataLogsService
 {
     /**
      * Get paginated logs with applied filters
+     * FIX N+1: Eager load relations untuk menghindari query berulang
      */
     public function getPaginatedLogs(array $filters, int $perPage = 25)
     {
-        $query = GetdataLog::orderBy('waktu_mulai', 'desc');
+        $query = GetdataLog::with(['sensorNodeData', 'sensorWeatherData', 'nodeLogs'])
+            ->orderBy('waktu_mulai', 'desc');
         
         // Filter by status
         if (!empty($filters['status'])) {

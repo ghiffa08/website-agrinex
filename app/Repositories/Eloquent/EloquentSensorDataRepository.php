@@ -35,15 +35,12 @@ class EloquentSensorDataRepository implements SensorDataRepositoryInterface
 
     public function getLatestForDevices()
     {
-        return SensorNodeData::select('node_id')
-            ->selectRaw('MAX(received_at) as latest_reading')
-            ->groupBy('node_id')
-            ->get()
-            ->map(function ($item) {
-                return SensorNodeData::where('node_id', $item->node_id)
-                    ->where('received_at', $item->latest_reading)
-                    ->first();
-            });
+        // FIX N+1: Gunakan subquery untuk mendapatkan latest record per node dalam satu query
+        return SensorNodeData::whereIn('id', function($query) {
+            $query->select(DB::raw('MAX(id)'))
+                ->from('sensor_node_data')
+                ->groupBy('node_id');
+        })->get();
     }
 
     public function getHistory($filters, $limit)

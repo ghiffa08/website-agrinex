@@ -39,7 +39,8 @@ class IrrigateLog extends Model
      */
     public function valveLogs()
     {
-        return $this->hasMany(ValveLog::class, 'sesi_id_irrigate', 'sesi_id_irrigate');
+        // FIX: valve_logs uses irrigation_log_id, not sesi_id_irrigate
+        return $this->hasMany(ValveLog::class, 'irrigation_log_id', 'id');
     }
 
     public function node()

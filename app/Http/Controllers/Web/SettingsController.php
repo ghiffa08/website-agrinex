@@ -10,6 +10,7 @@ class SettingsController extends Controller
 {
     /**
      * Display settings page
+     * FIX N+1: No eager loading needed for User model (no relations loaded in view)
      */
     public function index()
     {
