@@ -57,7 +57,7 @@ class WeatherController extends Controller
         $weatherHistory = WeatherData::where('device_id', 65)
             ->whereBetween('recorded_at', [$startDate, $endDate])
             ->orderBy('recorded_at', 'desc')
-            ->paginate(100);
+            ->simplePaginate(50);
 
         return view('weather.history', compact('weatherHistory', 'startDate', 'endDate'));
     }

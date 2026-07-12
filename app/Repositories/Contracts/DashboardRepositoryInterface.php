@@ -19,6 +19,15 @@ interface DashboardRepositoryInterface
      */
     public function getDevice(int $nodeId): ?array;
 
+    /**
+     * Invalidate cached data for a specific node.
+     * Should be called after telemetry ingestion to implement write-through caching.
+     *
+     * @param int $nodeId
+     * @return void
+     */
+    public function invalidateNodeCache(int $nodeId): void;
+
 
     /**
      * Get water tank information.

@@ -127,6 +127,14 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        'query-profiler' => [
+            'driver' => 'daily',
+            'path'   => storage_path('logs/query-profiler.log'),
+            'level'  => 'debug',
+            'days'   => 7,
+            'replace_placeholders' => true,
+        ],
+
     ],
 
 ];

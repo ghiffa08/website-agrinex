@@ -123,4 +123,18 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Query Profiler Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Controls the query profiling middleware. Set QUERY_PROFILER_ENABLED=true
+    | in .env to activate. Slow queries exceeding the threshold (in ms) will
+    | be logged individually to storage/logs/query-profiler.log.
+    |
+    */
+
+    'query_profiler_enabled' => (bool) env('QUERY_PROFILER_ENABLED', false),
+    'query_profiler_slow_threshold' => (int) env('QUERY_PROFILER_SLOW_THRESHOLD', 100),
+
 ];

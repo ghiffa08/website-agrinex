@@ -16,7 +16,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
             'iot.api' => \App\Http\Middleware\VerifyIotApiKey::class,
+            'query.profiler' => \App\Http\Middleware\QueryProfiler::class,
         ]);
+
+        // Apply query profiler globally to web and api routes
+        $middleware->appendToGroup('web', \App\Http\Middleware\QueryProfiler::class);
+        $middleware->appendToGroup('api', \App\Http\Middleware\QueryProfiler::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -37,7 +37,7 @@ class NodeLogsController extends Controller
             $query->whereDate('waktu', '<=', $request->end_date);
         }
         
-        $logs = $query->paginate(25);
+        $logs = $query->simplePaginate(25);
         $nodes = Node::orderBy('id')->get();
         
         return view('admin.node-logs.index', compact('logs', 'nodes'));

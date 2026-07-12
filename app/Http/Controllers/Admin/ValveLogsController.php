@@ -37,7 +37,7 @@ class ValveLogsController extends Controller
             $query->whereDate('waktu', '<=', $request->end_date);
         }
         
-        $logs = $query->paginate(25);
+        $logs = $query->simplePaginate(25);
         $nodes = Node::where('id', '!=', 65)->orderBy('id')->get();
         
         return view('admin.valve-logs.index', compact('logs', 'nodes'));

@@ -84,7 +84,7 @@ class AlertsController extends Controller
                     ->orWhere('rssi_dbm', '<', -120)
                     ->with('device')
                     ->latest('logged_at')
-                    ->paginate(50);
+                    ->simplePaginate(50);
                 $title = 'Communication Issues';
                 break;
             
@@ -93,7 +93,7 @@ class AlertsController extends Controller
                     ->where('recorded_at', '>=', now()->subDay())
                     ->with('device')
                     ->latest('recorded_at')
-                    ->paginate(50);
+                    ->simplePaginate(50);
                 $title = 'Low Soil Moisture Alerts';
                 break;
             
@@ -102,7 +102,7 @@ class AlertsController extends Controller
                     ->where('recorded_at', '>=', now()->subDay())
                     ->with('device')
                     ->latest('recorded_at')
-                    ->paginate(50);
+                    ->simplePaginate(50);
                 $title = 'High Temperature Alerts';
                 break;
             
@@ -111,7 +111,7 @@ class AlertsController extends Controller
                     ->where('recorded_at', '>=', now()->subDay())
                     ->with('device')
                     ->latest('recorded_at')
-                    ->paginate(50);
+                    ->simplePaginate(50);
                 $title = 'Low Voltage Alerts';
                 break;
         }

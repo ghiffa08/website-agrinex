@@ -32,7 +32,7 @@ class SensorNodeDataController extends Controller
             $query->whereDate('received_at', '<=', $request->end_date);
         }
         
-        $sensorData = $query->paginate(25);
+        $sensorData = $query->simplePaginate(25);
         $nodes = Node::where('id', '!=', 65)->orderBy('id')->get();
         
         return view('admin.sensor-node-data.index', compact('sensorData', 'nodes'));

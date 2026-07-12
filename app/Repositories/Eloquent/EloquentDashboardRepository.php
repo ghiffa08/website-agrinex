@@ -13,13 +13,43 @@ use Carbon\Carbon;
 
 class EloquentDashboardRepository implements DashboardRepositoryInterface
 {
-    protected int $realtimeCacheTtl  = 5;
-    protected int $analyticalCacheTtl = 300;
+    /**
+     * Cache TTL constants (in seconds).
+     *
+     * Real-time data (devices, weather) uses short TTL as a safety net;
+     * WebSocket push handles instant updates. Analytical data (usage,
+     * schedule) changes infrequently and can be cached longer.
+     */
+    protected int $realtimeCacheTtl   = 15;   // 15s safety net (WebSocket is primary)
+    protected int $analyticalCacheTtl = 600;  // 10 min for usage/schedule charts
+    protected int $perNodeCacheTtl    = 30;   // 30s per-node cache (write-through)
 
     /**
      * Get a single node with latest sensor data.
+     * Uses per-node write-through cache: the cache is warmed on telemetry
+     * ingestion via invalidateNodeCache(), so dashboard reads are near-free.
      */
     public function getDevice(int $nodeId): ?array
+    {
+        return Cache::remember("dashboard_node_{$nodeId}", $this->perNodeCacheTtl, function () use ($nodeId) {
+            return $this->buildNodeData($nodeId);
+        });
+    }
+
+    /**
+     * Invalidate caches for a specific node after telemetry write.
+     * Called by TelemetryApiController to implement write-through caching.
+     */
+    public function invalidateNodeCache(int $nodeId): void
+    {
+        Cache::forget("dashboard_node_{$nodeId}");
+        Cache::forget('dashboard_devices_repo');
+    }
+
+    /**
+     * Build the device data array for a single node (uncached).
+     */
+    private function buildNodeData(int $nodeId): ?array
     {
         $node = DB::table('node')->where('node_id', $nodeId)->first();
         if (!$node) return null;
@@ -33,8 +63,8 @@ class EloquentDashboardRepository implements DashboardRepositoryInterface
             ->where('node_id', $nodeId)
             ->orderBy('waktu', 'desc')
             ->first();
-            
-        $lahanName = $node->lahan_pantau_id 
+
+        $lahanName = $node->lahan_pantau_id
             ? DB::table('lahan_pantaus')->where('id', $node->lahan_pantau_id)->value('nama_lahan')
             : null;
 
