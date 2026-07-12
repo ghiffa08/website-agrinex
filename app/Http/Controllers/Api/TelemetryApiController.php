@@ -113,6 +113,16 @@ class TelemetryApiController extends Controller
             ]);
 
             // ── 5. Lightweight ACK for ESP32 ─────────────────────────────────
+            
+            \Illuminate\Support\Facades\Cache::forget('dashboard_devices_repo');
+            \Illuminate\Support\Facades\Cache::forget('dashboard_weather_repo');
+            
+            // Mengambil format data lengkap dari repository, lalu broadcast ke WebSocket queue
+            $deviceData = app(\App\Repositories\Contracts\DashboardRepositoryInterface::class)->getDevice($nodeId);
+            if ($deviceData) {
+                \App\Events\TelemetryReceived::dispatch($deviceData);
+            }
+            
             return response()->json([
                 'status' => 'ok',
                 'id'     => $sensorRecord->id,

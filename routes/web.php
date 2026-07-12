@@ -60,6 +60,28 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/devices', [AgriNexDashboardController::class, 'devices'])->name('agrinex.devices');
     Route::get('/node/{id}', [AgriNexDashboardController::class, 'nodeDetail'])->name('agrinex.node-detail');
 
+    // Reports Routes
+    Route::get('/reports', [\App\Http\Controllers\Web\ReportsController::class, 'index'])->name('reports.index');
+    Route::post('/reports/export', [\App\Http\Controllers\Web\ReportsController::class, 'export'])->name('reports.export');
+
+    // Profile Routes
+    Route::put('/profile', [\App\Http\Controllers\Web\ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/password', [\App\Http\Controllers\Web\ProfileController::class, 'updatePassword'])->name('profile.password');
+    Route::post('/profile/link-oauth', [\App\Http\Controllers\Web\ProfileController::class, 'linkOAuth'])->name('profile.link-oauth');
+    Route::post('/profile/unlink-oauth', [\App\Http\Controllers\Web\ProfileController::class, 'unlinkOAuth'])->name('profile.unlink-oauth');
+    Route::post('/profile/logout', [\App\Http\Controllers\Web\ProfileController::class, 'logout'])->name('profile.logout');
+    Route::get('/profile/password-strength', [\App\Http\Controllers\Web\ProfileController::class, 'checkPasswordStrength'])->name('profile.password-strength');
+    Route::get('/profile', [\App\Http\Controllers\Web\ProfileController::class, 'index'])->name('profile.index');
+    Route::put('/profile', [\App\Http\Controllers\Web\ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/update-password', [\App\Http\Controllers\Web\ProfileController::class, 'updatePassword'])->name('profile.update-password');
+    Route::post('/profile/logout', [\App\Http\Controllers\Web\ProfileController::class, 'logout'])->name('profile.logout');
+
+    // Admin Profile Routes
+    Route::prefix('admin')->group(function () {
+        Route::get('/profile', [\App\Http\Controllers\Web\ProfileController::class, 'index'])->name('admin.profile.index');
+        Route::put('/profile', [\App\Http\Controllers\Web\ProfileController::class, 'update'])->name('admin.profile.update');
+    });
+
     Route::middleware(['role'])->group(function () {
 
     // Simple Dashboard (Statistics only)

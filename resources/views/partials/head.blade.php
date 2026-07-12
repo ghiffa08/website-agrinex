@@ -1,9 +1,13 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="csrf-token" content="{{ csrf_token() }}" />
-<meta name="theme-color" :content="darkMode ? '#0f172a' : '#ffffff'" />
-<meta http-equiv="Permissions-Policy"
-    content="accelerometer=*, camera=(), geolocation=(), gyroscope=*, magnetometer=(), microphone=(), payment=(), usb=()" />
+    <link href="{{ asset('build/app-BdkvOlok.css') }}" rel="stylesheet" />
+    @stack('scripts')
+    
+    {{-- Profile AJAX Handler --}}
+    <script src="{{ asset('js/profile.js') }}"></script>
+</head>
+
 <title>Irigasi Pintar</title>
 <style>[x-cloak] { display: none !important; }</style>
 <script>

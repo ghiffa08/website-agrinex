@@ -15,8 +15,15 @@ class VerifyIotApiKey
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Mendapatkan API Key dari .env (default: 'agrinex-secure-key-2026' jika tidak di set)
-        $expectedApiKey = env('IOT_API_KEY', 'agrinex-secure-key-2026');
+        // Mendapatkan API Key dari .env tanpa nilai default hardcoded
+        $expectedApiKey = env('IOT_API_KEY');
+        
+        if (empty($expectedApiKey)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Server Configuration Error: IOT_API_KEY not set.'
+            ], 500);
+        }
 
         $providedKey = $request->header('X-API-Key');
 

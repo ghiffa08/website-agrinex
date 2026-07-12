@@ -65,6 +65,10 @@ class SensorDataController extends Controller
                 $request->all()
             );
 
+            \Illuminate\Support\Facades\Cache::forget('dashboard_devices_repo');
+            \Illuminate\Support\Facades\Cache::forget('dashboard_weather_repo');
+            broadcast(new \App\Events\DashboardDataUpdated());
+
             Log::info('Data processed successfully', [
                 'sesi_id' => $result['sesi_id_getdata'],
                 'total_records' => $result['total_inserted']

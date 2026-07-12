@@ -20,6 +20,9 @@
 <body x-data="adminLayout()" 
     class="h-full bg-[#f4f6f9] text-slate-800 transition-colors duration-300 font-sans antialiased">
 
+    {{-- Global Splash Screen --}}
+    @include('components.splash')
+
     <div class="flex h-screen overflow-hidden">
         
         {{-- Sidebar Component --}}

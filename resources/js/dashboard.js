@@ -110,6 +110,26 @@ function dashboard() {
             this.startClock();
             this.loadEssential();
             this.startPolling();
+
+            if (window.Echo) {
+                window.Echo.channel('dashboard-channel')
+                    .listen('.TelemetryReceived', (e) => {
+                        // Telemetry received via WebSocket
+                        if (e.deviceData && e.deviceData.device_id) {
+                            let index = this.devices.findIndex(d => d.device_id === e.deviceData.device_id);
+                            if (index !== -1) {
+                                this.devices[index] = e.deviceData;
+                            } else {
+                                this.devices.push(e.deviceData);
+                            }
+                            this.computeTopMetrics();
+                        }
+                    })
+                    .listen('.IrrigationStatusUpdated', (e) => {
+                        // Irrigation status updated via WebSocket
+                        this.refreshIrrigationData();
+                    });
+            }
         },
 
         // Alias for backward compatibility
@@ -153,8 +173,9 @@ function dashboard() {
 
         // --- Polling ---
         startPolling() {
-            // Fast poll (devices + env) every 30s
-            setInterval(() => this.loadEssential(), 30000);
+            // Fast poll (devices + env) dimatikan, diganti WebSockets
+            // setInterval(() => this.loadEssential(), 30000);
+            
             // Slow poll (usage, schedule) every 5min
             setInterval(() => this.loadSecondary(), 300000);
         },
@@ -691,6 +712,18 @@ function dashboard() {
         initLeafletFull() { if (this.leafletFullInited || !window.L) return; const map = L.map('leafletMapFull',{zoomControl:true}).setView([this.villageCenter.lat,this.villageCenter.lng],15); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map); L.polygon(this.villagePolygon,{color:'#15803d',weight:2,fillOpacity:0.1}).addTo(map); L.marker([this.villageCenter.lat,this.villageCenter.lng]).bindPopup('Pusat Lahan').addTo(map); this.leafletFullInited = true; },
 
         // --- Refresh ---
-        fetchDevices() { this.loadDevices(); this.loadEnvStats(); },
+        fetchDevices() { this.loadDevices(); this.loadEnvStats() },
+
+        // --- Irrigation Refresh ---
+        async refreshIrrigationData() {
+            // Refresh usage, schedule, and tank data after irrigation event
+            await Promise.allSettled([
+                this.loadUsage(),
+                this.loadUsageDaily(),
+                this.loadPlan(),
+                this.loadTank()
+            ]);
+            this.buildTasks();
+        },
     };
 }

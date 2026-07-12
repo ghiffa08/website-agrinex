@@ -1,17 +1,3 @@
-{{-- Mobile backdrop --}}
-<div
-    x-show="sidebarOpen"
-    x-transition:enter="transition ease-out duration-200"
-    x-transition:enter-start="opacity-0"
-    x-transition:enter-end="opacity-100"
-    x-transition:leave="transition ease-in duration-150"
-    x-transition:leave-start="opacity-100"
-    x-transition:leave-end="opacity-0"
-    @click="sidebarOpen = false"
-    class="fixed inset-0 z-40 bg-darkText/30 backdrop-blur-sm md:hidden"
-    x-cloak
-></div>
-
 {{-- Sidebar panel --}}
 <aside
     :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
@@ -21,120 +7,138 @@
         h-screen
         bg-neuBg
         shadow-[8px_0_16px_#a3b1c6] md:shadow-[4px_0_10px_#a3b1c6]
-        flex flex-col flex-shrink-0
+        hidden md:flex flex-col flex-shrink-0
         overflow-hidden
         transition-transform duration-300 ease-out
         py-4 md:py-6"
+    x-data="{ currentHash: window.location.hash || '' }"
+    @hashchange.window="currentHash = window.location.hash || ''"
 >
-    {{-- Brand mark --}}
-    <div class="flex items-center justify-center h-14 flex-shrink-0 mb-4 md:mb-6">
-        <a href="/"
-            class="flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-2xl
-                bg-neuBg shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff]
-                hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]
-                transition-all duration-300 active:scale-95">
-            <svg class="w-5 h-5 md:w-6 md:h-6 text-brand" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor" stroke-width="2.5">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M12 3C8.5 7 6 10 6 13a6 6 0 0012 0c0-3-2.5-6-6-10z"/>
-            </svg>
+
+    {{-- Logo / Brand --}}
+    <div class="flex items-center justify-center px-2 mb-8">
+        <a href="{{ route('agrinex.dashboard') }}" 
+            class="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-brand
+                shadow-[6px_6px_12px_#a3b1c6,-6px_-6px_12px_#ffffff]
+                hover:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.1),inset_-4px_-4px_8px_rgba(255,255,255,0.7)]
+                flex items-center justify-center text-white font-black text-xl
+                transition-all duration-300 active:scale-95"
+            title="AgriNex">
+            A
         </a>
     </div>
 
-    {{-- Nav items --}}
-    <nav class="flex-1 flex flex-col items-center gap-4 md:gap-6 py-2 md:py-4 px-2 overflow-y-auto no-scrollbar">
-
+    {{-- Navigation Menu --}}
+    <nav class="flex-1 flex flex-col items-center gap-4 px-2 overflow-y-auto">
+        
         {{-- Dashboard --}}
         <a href="{{ route('agrinex.dashboard') }}"
-            class="group relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-xl
-                {{ request()->routeIs('agrinex.dashboard') ? 'bg-neuBg shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand' : 'bg-neuBg shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] text-lightText hover:text-brand hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]' }}
-                transition-all duration-300 active:scale-95"
+            :class="currentHash === '' ? 'bg-neuBg shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand' : 'text-lightText hover:text-brand'"
+            class="w-12 h-12 md:w-14 md:h-14 rounded-2xl
+                shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff]
+                hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]
+                flex items-center justify-center
+                transition-all duration-300 active:scale-95 group"
             title="Dashboard">
             <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="7" height="7" rx="1.5"/>
-                <rect x="14" y="3" width="7" height="7" rx="1.5"/>
-                <rect x="3" y="14" width="7" height="7" rx="1.5"/>
-                <rect x="14" y="14" width="7" height="7" rx="1.5"/>
-            </svg>
-            <span class="sidebar-tooltip">Dashboard</span>
-        </a>
-
-        {{-- Lahan Pantau --}}
-        <a href="#"
-            class="group relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-xl
-                bg-neuBg shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff]
-                text-lightText hover:text-brand
-                hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]
-                transition-all duration-300 active:scale-95"
-            title="Lahan Pantau">
-            <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945
-                    M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064
-                    M15 20.488V18a2 2 0 012-2h3.064
-                    M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z
+                    M14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z
+                    M4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z
+                    M14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
             </svg>
-            <span class="sidebar-tooltip">Lahan Pantau</span>
         </a>
 
-        {{-- Perangkat --}}
+        {{-- Devices --}}
         <a href="{{ route('agrinex.devices') }}"
-            class="group relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-xl
-                {{ request()->routeIs('agrinex.devices') || request()->routeIs('agrinex.node-detail') ? 'bg-neuBg shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand' : 'bg-neuBg shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] text-lightText hover:text-brand hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]' }}
+            :class="'{{ request()->routeIs('agrinex.devices') || request()->routeIs('agrinex.node-detail') ? 'active' : '' }}' === 'active' ? 'bg-neuBg shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand' : 'text-lightText hover:text-brand'"
+            class="w-12 h-12 md:w-14 md:h-14 rounded-2xl
+                shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff]
+                hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]
+                flex items-center justify-center
                 transition-all duration-300 active:scale-95"
             title="Perangkat">
             <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
             </svg>
-            <span class="sidebar-tooltip">Perangkat</span>
         </a>
 
-        {{-- Riwayat --}}
+        {{-- Weather --}}
         <a href="#"
-            class="group relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-xl
-                bg-neuBg shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff]
+            class="w-12 h-12 md:w-14 md:h-14 rounded-2xl
                 text-lightText hover:text-brand
-                hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]
-                transition-all duration-300 active:scale-95"
-            title="Riwayat">
-            <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-            </svg>
-            <span class="sidebar-tooltip">Riwayat</span>
-        </a>
-
-        {{-- Pengaturan --}}
-        <a href="#"
-            class="group relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-xl
-                bg-neuBg shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff]
-                text-lightText hover:text-brand
-                hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]
-                transition-all duration-300 active:scale-95"
-            title="Pengaturan">
-            <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-            </svg>
-            <span class="sidebar-tooltip">Pengaturan</span>
-        </a>
-    </nav>
-
-    {{-- Account button --}}
-    <div class="flex items-center justify-center py-3 md:py-4 flex-shrink-0 mt-auto">
-        <button
-            class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-neuBg
                 shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff]
                 hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]
-                text-lightText hover:text-brand transition-all duration-300
-                flex items-center justify-center active:scale-95"
-            title="Akun Saya">
+                flex items-center justify-center
+                transition-all duration-300 active:scale-95"
+            title="Cuaca">
             <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
             </svg>
-        </button>
+        </a>
+
+        {{-- Reports --}}
+        <a href="{{ route('reports.index') }}"
+            :class="'{{ request()->routeIs('reports.index') ? 'active' : '' }}' === 'active' ? 'bg-neuBg shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand' : 'text-lightText hover:text-brand'"
+            class="w-12 h-12 md:w-14 md:h-14 rounded-2xl
+                shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff]
+                hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]
+                flex items-center justify-center
+                transition-all duration-300 active:scale-95"
+            title="Laporan">
+            <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+        </a>
+
+    </nav>
+
+    {{-- Bottom section: Home + Profile --}}
+    <div class="mt-auto space-y-4 px-2">
+        
+        {{-- Home Button --}}
+        <div class="flex items-center justify-center">
+            <a href="{{ route('agrinex.dashboard') }}"
+                :class="currentHash === '' ? 'text-brand shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]' : 'text-lightText hover:text-brand'"
+                class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-neuBg
+                    shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff]
+                    hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]
+                    transition-all duration-300
+                    flex items-center justify-center active:scale-95"
+                title="Beranda">
+                <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a2 2 0 002 2h10a2 2 0 002-2V10M9 21h6"/>
+                </svg>
+            </a>
+        </div>
+
+        {{-- Profile Button --}}
+        <div class="flex items-center justify-center">
+            <a href="/#profile"
+                :class="currentHash === '#profile' ? 'text-brand shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]' : 'text-lightText hover:text-brand'"
+                class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-neuBg
+                    shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff]
+                    hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]
+                    transition-all duration-300
+                    flex items-center justify-center active:scale-95 overflow-hidden"
+                title="Profil Saya">
+                @include('components.profile-avatar', [
+                    'user' => Auth::user(),
+                    'size' => 'sm',
+                    'showBorder' => false,
+                    'showShadow' => false,
+                ])
+            </a>
+        </div>
+        
     </div>
+
 </aside>
+
+{{-- Mobile sidebar backdrop --}}
+<div x-show="sidebarOpen" 
+     @click="sidebarOpen = false"
+     x-transition.opacity
+     class="fixed inset-0 z-40 bg-black/30 md:hidden"></div>

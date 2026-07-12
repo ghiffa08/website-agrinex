@@ -401,10 +401,13 @@
 </head>
 
 <body>
-    <!-- Sidebar -->
+    {{-- Global Splash Screen --}}
+    @include('components.splash')
+    
+    {{-- Sidebar --}}
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <img src="{{ asset('AgrinexLogo.jpg') }}" alt="">
+            <img src="{{ asset('AgrinexLogo.jpg') }}" alt="AgriNex Smart Drip Logo">
             <h4>Smart Drip</h4>
             <small>Irrigation System</small>
         </div>

@@ -12,6 +12,15 @@ interface DashboardRepositoryInterface
     public function getDevices();
 
     /**
+     * Get a specific device with its latest sensor data and connection status.
+     *
+     * @param int $nodeId
+     * @return array|null
+     */
+    public function getDevice(int $nodeId): ?array;
+
+
+    /**
      * Get water tank information.
      *
      * @return array

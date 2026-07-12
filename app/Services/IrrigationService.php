@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\IrrigationStatusUpdated;
 use App\Repositories\Contracts\IrrigationRepositoryInterface;
 use App\Repositories\Contracts\LogRepositoryInterface;
 use App\Repositories\Contracts\DeviceRepositoryInterface;
@@ -86,6 +87,12 @@ class IrrigationService
                 'counts' => $insertedCounts
             ]);
 
+            event(new IrrigationStatusUpdated([
+                'sesi_id' => $sesiId,
+                'status' => 'updated',
+                'timestamp' => now()->toDateTimeString()
+            ]));
+
             return [
                 'sesi_id_irrigate' => $sesiId,
                 'inserted_records' => $insertedCounts,
@@ -134,6 +141,12 @@ class IrrigationService
                 'node_id' => $nodeId,
                 'counts' => $insertedCounts
             ]);
+
+            event(new IrrigationStatusUpdated([
+                'node_id' => $nodeId,
+                'status' => 'valve_off',
+                'timestamp' => now()->toDateTimeString()
+            ]));
 
             return [
                 'node_id' => $nodeId,

@@ -17,6 +17,76 @@ class EloquentDashboardRepository implements DashboardRepositoryInterface
     protected int $analyticalCacheTtl = 300;
 
     /**
+     * Get a single node with latest sensor data.
+     */
+    public function getDevice(int $nodeId): ?array
+    {
+        $node = DB::table('node')->where('node_id', $nodeId)->first();
+        if (!$node) return null;
+
+        $sensor = DB::table('sensor_node_data')
+            ->where('node_id', $nodeId)
+            ->orderBy('received_at', 'desc')
+            ->first();
+
+        $log = DB::table('node_logs')
+            ->where('node_id', $nodeId)
+            ->orderBy('waktu', 'desc')
+            ->first();
+            
+        $lahanName = $node->lahan_pantau_id 
+            ? DB::table('lahan_pantaus')->where('id', $node->lahan_pantau_id)->value('nama_lahan')
+            : null;
+
+        $lastSeen = $sensor->received_at ?? $log->waktu ?? null;
+        $status   = $lastSeen ? $this->getConnectionStatus($lastSeen) : 'offline';
+
+        return [
+            'id'                    => $node->node_id,
+            'device_id'             => $node->node_id,
+            'name'                  => "Node {$node->node_id}",
+            'device_name'           => "Node {$node->node_id}",
+            'plot_number'           => $node->node_id,
+            'location'              => $node->lokasi ?? "Sensor Node {$node->node_id}",
+            'treatment_description' => $node->keterangan ?? 'Monitoring Optimal',
+            'treatment_type'        => $node->group ?? 'standard',
+            'treatment_code'        => $node->kode_perlakuan ?? "T{$node->node_id}",
+            'group'                 => $node->group,
+            'kode_perlakuan'        => $node->kode_perlakuan,
+            'lahan_pantau_id'       => $node->lahan_pantau_id ?? null,
+            'lahan_pantau_name'     => $lahanName,
+
+            'soil_moisture_pct'    => $sensor ? (float) $sensor->soil_pct  : null,
+            'temperature_c'        => $sensor ? (float) $sensor->temp_c    : null,
+            'battery_voltage_v'    => $sensor ? (float) $sensor->voltage_v : null,
+            'battery_percentage'   => $sensor ? $this->calculateBatteryPercentage($sensor->voltage_v) : null,
+
+            'air_temp_c'           => null,
+            'air_humidity_pct'     => null,
+            'light_lux'            => null,
+            'water_height_cm'      => null,
+
+            'signal_strength_rssi' => $log ? (float) $log->rssi_dbm : null,
+            'signal_strength_pct'  => $log && $log->rssi_dbm
+                ? max(0, min(100, round((($log->rssi_dbm + 120) / 70) * 100)))
+                : null,
+
+            'connection_state'   => $status,
+            'connection_status'  => $status,
+            'valve_state'        => 'closed',
+            'is_active'          => true,
+            'status'             => $sensor ? 'normal' : 'no_data',
+            'water_usage_today_l' => 0,
+            'last_seen'          => $lastSeen,
+            'recorded_at'        => $lastSeen,
+            'waktu_update'       => $node->waktu_update ?? null,
+            'last_updated'       => $lastSeen
+                ? Carbon::parse($lastSeen)->diffForHumans()
+                : null,
+        ];
+    }
+
+    /**
      * Get all nodes with latest sensor data.
      * Fixed: was doing N+1 queries (1 per node). Now uses 2 bulk queries total.
      */
