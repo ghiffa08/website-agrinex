@@ -20,6 +20,8 @@ use App\Http\Controllers\Api\TelemetryApiController;
 
 // API v1
 Route::post('/telemetry', [TelemetryApiController::class, 'store']);
+Route::get('/nodes/config', [\App\Http\Controllers\Api\NodeConfigController::class, 'getConfig']);
+Route::post('/nodes/config', [\App\Http\Controllers\Api\NodeConfigController::class, 'updateConfig']);
 Route::prefix('v1')->group(function () {
     
     // Data Ingestion Endpoints (NEW - for IoT devices)

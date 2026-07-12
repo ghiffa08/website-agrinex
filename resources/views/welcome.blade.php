@@ -42,6 +42,7 @@
                         @include('components.weather-summary')
                     </div>
                     <div class="lg:col-span-8 flex flex-col">
+                        @include('components.node-config')
                         @include('components.devices-tank')
                     </div>
                 </div>

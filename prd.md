@@ -13,7 +13,8 @@
 
 ### 3.1. Dashboard (Home Screen)
 - **Summary Metrics:** Total active nodes, inactive nodes, and overall system health.
-- **Weather Overview:** Real-time data from the central weather station (Node 65) including light intensity (Lux), temperature (°C), humidity (%), and rain status.
+- **Weather & Environment Overview:** Real-time data from the nodes including temperature (°C), soil moisture (%), and calculated power metrics (Voltage/Current).
+- **Water Consumption:** Real-time tracking of flow rate (L/min) and total volume (Liters) based on flow meter interrupts.
 - **Quick Alerts:** Warnings for low battery/voltage, disconnected nodes, or critically low soil moisture.
 
 ### 3.2. Node Monitoring (Device List)
@@ -27,10 +28,10 @@
 ### 3.3. Analytics & Charts
 - **Historical Data:** Visual charts for the last 7 to 30 days.
 - **Metrics to Track:**
-  - Light Intensity
-  - Water Volume Consumed (mL/Liters)
-  - Soil Moisture Trends
-  - Temperature & Humidity
+  - Water Volume Consumed (Liters) and Flow Rate (L/min)
+  - Soil Moisture Trends (%)
+  - Temperature (°C)
+  - Power Consumption (Voltage, Current, Power in mW)
 - **Interactivity:** Tooltips on charts, ability to filter by specific node or time range.
 
 ### 3.4. Irrigation & Valve History
