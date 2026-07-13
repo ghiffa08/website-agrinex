@@ -98,15 +98,54 @@
                         </div>
 
                         {{-- Chart Section --}}
-                        <div class="bg-neuBg rounded-[2.5rem] p-6 md:p-8 shadow-[8px_8px_16px_#a3b1c6,-8px_-8px_16px_#ffffff]">
-                            <h3 class="text-lg font-bold tracking-tight text-darkText mb-6">Grafik Sensor (24 Jam)</h3>
-                            <div class="w-full h-[300px] md:h-[400px]">
-                                <canvas id="nodeChartCanvas"></canvas>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {{-- Sensor Chart --}}
+                            <div class="bg-neuBg rounded-[2.5rem] p-6 md:p-8 shadow-[8px_8px_16px_#a3b1c6,-8px_-8px_16px_#ffffff]">
+                                <h3 class="text-lg font-bold tracking-tight text-darkText mb-6">Grafik Sensor (24 Jam)</h3>
+                                <div class="w-full h-[300px]">
+                                    <canvas id="nodeChartCanvas"></canvas>
+                                </div>
+                            </div>
+
+                            {{-- Irrigation Sessions Chart --}}
+                            <div class="bg-neuBg rounded-[2.5rem] p-6 md:p-8 shadow-[8px_8px_16px_#a3b1c6,-8px_-8px_16px_#ffffff]">
+                                <h3 class="text-lg font-bold tracking-tight text-darkText mb-6">Chart Sesi Irigasi (Hari Ini)</h3>
+                                <div class="w-full h-[300px]">
+                                    <canvas id="irrigationChartCanvas"></canvas>
+                                </div>
                             </div>
                         </div>
 
                         {{-- Tables Section --}}
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            
+                            {{-- Sleep History --}}
+                            <div class="bg-neuBg rounded-[2.5rem] p-6 md:p-8 shadow-[8px_8px_16px_#a3b1c6,-8px_-8px_16px_#ffffff]">
+                                <h3 class="text-lg font-bold tracking-tight text-darkText mb-4">Riwayat Sleep Mode (7 Hari)</h3>
+                                <div class="overflow-x-auto bg-neuBg shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] rounded-2xl p-2 max-h-[300px] overflow-y-auto no-scrollbar">
+                                    <table class="min-w-full text-xs text-left">
+                                        <thead class="text-lightText font-bold border-b-2 border-white/30 sticky top-0 bg-neuBg/90 backdrop-blur-md">
+                                            <tr>
+                                                <th class="px-4 py-3">Waktu Mulai</th>
+                                                <th class="px-4 py-3">Waktu Selesai</th>
+                                                <th class="px-4 py-3 text-right">Durasi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="text-darkText font-medium">
+                                            <template x-if="!sleepHistory.length">
+                                                <tr><td colspan="3" class="px-4 py-4 text-center italic text-lightText">Tidak ada riwayat sleep mode.</td></tr>
+                                            </template>
+                                            <template x-for="s in sleepHistory" :key="s.sleep_start">
+                                                <tr class="border-b border-white/20 last:border-0 hover:bg-white/20 transition-colors">
+                                                    <td class="px-4 py-3 text-[10px]" x-text="formatDateTime(s.sleep_start)"></td>
+                                                    <td class="px-4 py-3 text-[10px]" x-text="formatDateTime(s.sleep_end)"></td>
+                                                    <td class="px-4 py-3 text-right text-brand font-bold" x-text="s.duration_formatted"></td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                             
                             {{-- Sesi Irigasi --}}
                             <div class="bg-neuBg rounded-[2.5rem] p-6 md:p-8 shadow-[8px_8px_16px_#a3b1c6,-8px_-8px_16px_#ffffff]">
@@ -198,7 +237,9 @@
                 deviceSessions: [],
                 deviceSessionsSummary: null,
                 deviceUsageHistory: [],
+                sleepHistory: [],
                 chartObj: null,
+                irrigationChartObj: null,
 
                 async initDetail() {
                     // Fetch all devices to find this specific node
@@ -214,6 +255,7 @@
                         await Promise.all([
                             this.fetchSessions(),
                             this.fetchHistory(),
+                            this.fetchSleepHistory(),
                             this.fetchChartData()
                         ]);
                     } catch (e) {
@@ -225,18 +267,19 @@
 
                 async fetchSessions() {
                     try {
-                        const resp = await fetch(`/api/devices/${this.deviceId}/irrigation/sessions`);
+                        const resp = await fetch(`/api/v1/devices/${this.deviceId}/irrigation/sessions`);
                         if (resp.ok) {
                             const data = await resp.json();
                             this.deviceSessions = data.sessions || [];
                             this.deviceSessionsSummary = data.summary || null;
+                            this.renderIrrigationChart();
                         }
                     } catch (e) { console.error(e); }
                 },
 
                 async fetchHistory() {
                     try {
-                        const resp = await fetch(`/api/devices/${this.deviceId}/usage-history`);
+                        const resp = await fetch(`/api/v1/devices/${this.deviceId}/usage-history`);
                         if (resp.ok) {
                             const data = await resp.json();
                             this.deviceUsageHistory = data.history || [];
@@ -244,9 +287,19 @@
                     } catch (e) { console.error(e); }
                 },
 
+                async fetchSleepHistory() {
+                    try {
+                        const resp = await fetch(`/api/v1/devices/${this.deviceId}/sleep-history`);
+                        if (resp.ok) {
+                            const data = await resp.json();
+                            this.sleepHistory = data.history || [];
+                        }
+                    } catch (e) { console.error(e); }
+                },
+
                 async fetchChartData() {
                     try {
-                        const resp = await fetch(`/api/devices/${this.deviceId}/chart-data`);
+                        const resp = await fetch(`/api/v1/devices/${this.deviceId}/chart-data`);
                         if (resp.ok) {
                             const data = await resp.json();
                             const ds = data.datasets || {};
@@ -360,6 +413,92 @@
                             }
                         }
                     });
+                },
+
+                renderIrrigationChart() {
+                    const ctx = document.getElementById('irrigationChartCanvas');
+                    if(!ctx || !this.deviceSessions.length) return;
+                    
+                    if(this.irrigationChartObj) {
+                        this.irrigationChartObj.destroy();
+                    }
+
+                    const labels = this.deviceSessions.map(s => s.index || s.session || '#' + (this.deviceSessions.indexOf(s) + 1));
+                    const plannedData = this.deviceSessions.map(s => s.planned_l || s.planned_volume_l || 0);
+                    const actualData = this.deviceSessions.map(s => s.actual_l || s.actual_volume_l || 0);
+
+                    Chart.defaults.color = '#7e8a9f';
+                    Chart.defaults.font.family = "'Inter', sans-serif";
+
+                    this.irrigationChartObj = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: 'Target (L)',
+                                    data: plannedData,
+                                    backgroundColor: 'rgba(163, 177, 198, 0.6)',
+                                    borderColor: '#a3b1c6',
+                                    borderWidth: 2,
+                                    borderRadius: 8,
+                                },
+                                {
+                                    label: 'Aktual (L)',
+                                    data: actualData,
+                                    backgroundColor: 'rgba(14, 165, 233, 0.7)',
+                                    borderColor: '#0ea5e9',
+                                    borderWidth: 2,
+                                    borderRadius: 8,
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'top',
+                                    labels: {
+                                        usePointStyle: true,
+                                        padding: 15,
+                                        font: { weight: 'bold', size: 11 }
+                                    }
+                                },
+                                tooltip: {
+                                    backgroundColor: 'rgba(224, 229, 236, 0.95)',
+                                    titleColor: '#2b313b',
+                                    bodyColor: '#4b5563',
+                                    borderColor: 'rgba(255, 255, 255, 0.8)',
+                                    borderWidth: 1,
+                                    padding: 10,
+                                    cornerRadius: 10,
+                                    titleFont: { size: 12, weight: 'bold' },
+                                    bodyFont: { size: 11, weight: 'bold' }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    grid: { display: false, drawBorder: false }
+                                },
+                                y: {
+                                    beginAtZero: true,
+                                    grid: { color: 'rgba(163, 177, 198, 0.2)', borderDash: [5, 5] },
+                                    title: { display: true, text: 'Volume (Liter)', font: {weight: 'bold', size: 11} }
+                                }
+                            }
+                        }
+                    });
+                },
+
+                formatDateTime(dateStr) {
+                    if (!dateStr) return '-';
+                    const date = new Date(dateStr);
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    return `${day}/${month} ${hours}:${minutes}`;
                 },
 
                 fmt(val, unit) {

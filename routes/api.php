@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\WeatherController;
 use App\Http\Controllers\Api\DeviceController;
 use App\Http\Controllers\Api\TelemetryApiController;
 use App\Http\Controllers\Api\DashboardPollingController;
+use App\Http\Controllers\Api\DeviceDetailController;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,9 +35,9 @@ Route::prefix('v1')->group(function () {
     });
     
     // Dashboard Endpoints (NEW - for web dashboard)
-    Route::prefix('dashboard')->middleware(['throttle:polling'])->group(function () {
+    Route::prefix('dashboard')->group(function () {
         Route::get('/poll', [DashboardPollingController::class, 'poll']);
-        Route::get('/poll-status', [DashboardPollingController::class, 'pollStatus']);
+        Route::get('/poll-status', [DashboardPollingController::class, 'status']);
         Route::get('/devices', [DashboardApiController::class, 'getDevices']);
         Route::get('/tank', [DashboardApiController::class, 'getTank']);
         Route::get('/schedule', [DashboardApiController::class, 'getSchedule']);
@@ -45,6 +46,14 @@ Route::prefix('v1')->group(function () {
         Route::get('/charts', [DashboardApiController::class, 'getChartData']);
         Route::get('/weather', [DashboardApiController::class, 'getWeather']);
         Route::get('/json-backup', [DashboardApiController::class, 'getJsonBackup']);
+    });
+    
+    // Device detail endpoints
+    Route::prefix('devices/{deviceId}')->group(function () {
+        Route::get('/sleep-history', [DeviceDetailController::class, 'sleepHistory']);
+        Route::get('/irrigation/sessions', [DeviceDetailController::class, 'irrigationSessions']);
+        Route::get('/usage-history', [DeviceDetailController::class, 'usageHistory']);
+        Route::get('/chart-data', [DeviceDetailController::class, 'chartData']);
     });
     
     // Sensor Data Endpoints
@@ -80,13 +89,6 @@ Route::prefix('v1')->group(function () {
 
 // BMKG Weather Proxy (untuk bypass CORS)
 Route::get('/bmkg/forecast', [WeatherController::class, 'getForecast']);
-
-// Device-specific endpoints (untuk detail pages)
-Route::prefix('devices/{deviceId}')->middleware(['throttle:polling'])->group(function () {
-    Route::get('/irrigation/sessions', [DeviceController::class, 'getIrrigationSessions']);
-    Route::get('/usage-history', [DeviceController::class, 'getUsageHistory']);
-    Route::get('/chart-data', [DeviceController::class, 'getChartData']);
-});
 
 
 

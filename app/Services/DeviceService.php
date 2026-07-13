@@ -117,6 +117,75 @@ class DeviceService
     }
 
     /**
+     * Get sleep history for device (last 7 days)
+     * Tracks when device enters/exits sleep mode
+     */
+    public function getSleepHistory(int|string $deviceId): array
+    {
+        return $this->cacheService->remember(
+            "sleep_history_{$deviceId}",
+            CacheService::TTL_MEDIUM,
+            function () use ($deviceId) {
+                // Get sleep/wake events from sensor data
+                // Assumption: device is "sleeping" when there's a gap > 15 minutes between readings
+                $allReadings = SensorData::where('device_id', $deviceId)
+                    ->where('recorded_at', '>=', Carbon::now()->subDays(7))
+                    ->orderBy('recorded_at', 'asc')
+                    ->get(['recorded_at', 'battery_voltage']);
+
+                $history = [];
+                $prevReading = null;
+
+                foreach ($allReadings as $reading) {
+                    $currentTime = Carbon::parse($reading->recorded_at);
+
+                    if ($prevReading) {
+                        $prevTime = Carbon::parse($prevReading->recorded_at);
+                        $gapMinutes = $prevTime->diffInMinutes($currentTime);
+
+                        // If gap > 15 minutes, device was sleeping
+                        if ($gapMinutes > 15) {
+                            $durationMinutes = $gapMinutes;
+
+                            $history[] = [
+                                'sleep_start' => $prevTime->format('Y-m-d H:i:s'),
+                                'sleep_end' => $currentTime->format('Y-m-d H:i:s'),
+                                'duration_minutes' => $durationMinutes,
+                                'duration_formatted' => $this->formatDuration($durationMinutes),
+                                'battery_before' => $prevReading->battery_voltage ? (float) $prevReading->battery_voltage : null,
+                                'battery_after' => $reading->battery_voltage ? (float) $reading->battery_voltage : null,
+                            ];
+                        }
+                    }
+
+                    $prevReading = $reading;
+                }
+
+                return array_reverse($history); // Most recent first
+            }
+        );
+    }
+
+    /**
+     * Format duration in human-readable format
+     */
+    private function formatDuration(int $minutes): string
+    {
+        if ($minutes < 60) {
+            return "{$minutes} menit";
+        }
+
+        $hours = floor($minutes / 60);
+        $remainingMinutes = $minutes % 60;
+
+        if ($remainingMinutes === 0) {
+            return "{$hours} jam";
+        }
+
+        return "{$hours} jam {$remainingMinutes} menit";
+    }
+
+    /**
      * Get all devices with latest sensor data (for polling)
      */
     public function getAllDevicesWithLatestData(): array
