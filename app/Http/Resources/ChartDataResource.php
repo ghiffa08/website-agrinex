@@ -28,59 +28,59 @@ class ChartDataResource extends ResourceCollection
         ];
 
         foreach ($this->collection as $session) {
-            $sessionTime = Carbon::parse($session->waktu_mulai);
+            $sessionTime = Carbon::parse($session->started_at);
             $timestamp = $sessionTime->format('H:i');
             
             $weather = null;
-            $weatherList = $session->sensorWeatherData;
+            $weatherList = $session->weatherData;
             if ($weatherList && $weatherList->count() > 0) {
                 $weather = $weatherList->first();
                 
                 if ($type === 'all' || $type === 'temperature') {
                     $chartData['temperature'][] = [
                         'time' => $timestamp,
-                        'value' => (float) $weather->temp_dht,
-                        'temperature' => (float) $weather->temp_dht
+                        'value' => (float) $weather->temp_c,
+                        'temperature' => (float) $weather->temp_c
                     ];
                 }
                 
                 if ($type === 'all' || $type === 'humidity') {
                     $chartData['humidity'][] = [
                         'time' => $timestamp,
-                        'value' => (float) $weather->humidity,
-                        'humidity' => (float) $weather->humidity
+                        'value' => (float) $weather->humidity_pct,
+                        'humidity' => (float) $weather->humidity_pct
                     ];
                 }
                 
                 if ($type === 'all' || $type === 'light') {
                     $chartData['light'][] = [
                         'time' => $timestamp,
-                        'value' => (float) $weather->light,
-                        'radiation' => (float) $weather->light
+                        'value' => (float) $weather->light_lux,
+                        'radiation' => (float) $weather->light_lux
                     ];
                 }
                 
                 if ($type === 'all' || $type === 'voltage') {
                     $chartData['voltage'][] = [
                         'time' => $timestamp,
-                        'value' => (float) $weather->voltage,
-                        'voltage' => (float) $weather->voltage
+                        'value' => (float) $weather->voltage_v,
+                        'voltage' => (float) $weather->voltage_v
                     ];
                 }
                 
                 if ($type === 'all' || $type === 'power') {
                     $chartData['power'][] = [
                         'time' => $timestamp,
-                        'value' => (float) $weather->power,
-                        'power' => (float) $weather->power
+                        'value' => (float) $weather->power_mw,
+                        'power' => (float) $weather->power_mw
                     ];
                 }
             }
             
             if ($type === 'all' || $type === 'soilMoisture') {
                 $soilValues = [];
-                foreach ($session->sensorNodeData as $node) {
-                    $sensorId = "SM{$node->node_id}";
+                foreach ($session->sensorData as $node) {
+                    $sensorId = "SM{$node->device_id}";
                     
                     if (!isset($chartData['soilMoisture'][$sensorId])) {
                         $chartData['soilMoisture'][$sensorId] = [];
@@ -88,10 +88,10 @@ class ChartDataResource extends ResourceCollection
                     
                     $chartData['soilMoisture'][$sensorId][] = [
                         'time' => $timestamp,
-                        'value' => (float) $node->soil_pct
+                        'value' => (float) $node->soil_moisture
                     ];
                     
-                    $soilValues[] = (float) $node->soil_pct;
+                    $soilValues[] = (float) $node->soil_moisture;
                 }
                 
                 if (!empty($soilValues)) {
@@ -105,7 +105,7 @@ class ChartDataResource extends ResourceCollection
                 }
             }
             
-            if (($type === 'all' || $type === 'water') && $weather && $weather->level !== null) {
+            if (($type === 'all' || $type === 'water') && $weather && isset($weather->level) && $weather->level !== null) {
                 if (!isset($chartData['water'])) {
                     $chartData['water'] = [];
                 }
