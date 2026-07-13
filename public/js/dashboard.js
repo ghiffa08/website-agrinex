@@ -9,11 +9,13 @@ function dashboard() {
         darkMode: localStorage.getItem('sis_dark') === '1',
         sidebarOpen: false,
 
+        loadingAll: true,
         loadingDevices: false,
         loadingWeather: true,
         loadingTank: true,
         loadingUsage: true,
         loadingSchedule: true,
+        loadingCharts: true,
         fetchError: false,
         lastUpdated: null,
 
@@ -193,6 +195,8 @@ function dashboard() {
                 await Promise.all([this.loadDevices(), this.loadEnvStats()]);
                 this.computeTopMetrics();
                 this.lastUpdated = new Date();
+                this.loadingAll = false;
+                this.loadingCharts = false;
             } catch (_) { this.fetchError = true; }
         },
 
@@ -730,7 +734,42 @@ function dashboard() {
                 this.loadPlan(),
                 this.loadTank()
             ]);
-            this.buildTasks();
+        },
+
+        // --- Helper Functions ---
+        fmt(val, unit) {
+            if (val == null || val === '') return '-';
+            return parseFloat(val).toFixed(1) + (unit || '');
+        },
+
+        batteryDisplay(device) {
+            if (!device) return '-';
+            const v = device.battery_voltage_v;
+            if (v == null) return '-';
+            const pct = Math.max(0, Math.min(100, ((v - 3.3) / (4.2 - 3.3)) * 100));
+            return pct.toFixed(0) + '%';
+        },
+
+        avgUsage() {
+            if (!this.usage.length) return '0';
+            const avg = this.usage.reduce((sum, u) => sum + (u.total_l || 0), 0) / this.usage.length;
+            return avg.toFixed(1);
+        },
+
+        avgUsage24h() {
+            if (!this.usage24h.length) return '0';
+            const avg = this.usage24h.reduce((sum, u) => sum + (u.total_l || 0), 0) / this.usage24h.length;
+            return avg.toFixed(1);
+        },
+
+        // Computed properties
+        get soilMoistureSensors() {
+            return this.devices.filter(d => d.soil_moisture_pct != null);
+        },
+
+        get weekLegend() {
+            const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+            return this.weekViewDays.map(d => days[new Date(d.date).getDay()]);
         },
     };
 }
