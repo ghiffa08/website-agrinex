@@ -109,7 +109,26 @@
 
                             {{-- Irrigation Sessions Chart --}}
                             <div class="bg-neuBg rounded-[2.5rem] p-6 md:p-8 shadow-[8px_8px_16px_#a3b1c6,-8px_-8px_16px_#ffffff]">
-                                <h3 class="text-lg font-bold tracking-tight text-darkText mb-6">Chart Sesi Irigasi (Hari Ini)</h3>
+                                <div class="flex items-center justify-between mb-6">
+                                    <h3 class="text-lg font-bold tracking-tight text-darkText">Chart Sesi Irigasi</h3>
+                                    <div class="flex gap-2">
+                                        <button @click="irrigationPeriod='today'; fetchSessions()" 
+                                                :class="irrigationPeriod==='today' ? 'shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand' : 'shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] text-lightText'"
+                                                class="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all">
+                                            Hari Ini
+                                        </button>
+                                        <button @click="irrigationPeriod='week'; fetchSessions()" 
+                                                :class="irrigationPeriod==='week' ? 'shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand' : 'shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] text-lightText'"
+                                                class="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all">
+                                            Minggu Ini
+                                        </button>
+                                        <button @click="irrigationPeriod='month'; fetchSessions()" 
+                                                :class="irrigationPeriod==='month' ? 'shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand' : 'shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] text-lightText'"
+                                                class="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all">
+                                            Bulan Ini
+                                        </button>
+                                    </div>
+                                </div>
                                 <div class="w-full h-[300px]">
                                     <canvas id="irrigationChartCanvas"></canvas>
                                 </div>
@@ -121,7 +140,26 @@
                             
                             {{-- Sleep History --}}
                             <div class="bg-neuBg rounded-[2.5rem] p-6 md:p-8 shadow-[8px_8px_16px_#a3b1c6,-8px_-8px_16px_#ffffff]">
-                                <h3 class="text-lg font-bold tracking-tight text-darkText mb-4">Riwayat Sleep Mode (7 Hari)</h3>
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-lg font-bold tracking-tight text-darkText">Riwayat Sleep Mode</h3>
+                                    <div class="flex gap-2">
+                                        <button @click="sleepPeriod='today'; fetchSleepHistory()" 
+                                                :class="sleepPeriod==='today' ? 'shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand' : 'shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] text-lightText'"
+                                                class="px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all">
+                                            Hari Ini
+                                        </button>
+                                        <button @click="sleepPeriod='week'; fetchSleepHistory()" 
+                                                :class="sleepPeriod==='week' ? 'shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand' : 'shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] text-lightText'"
+                                                class="px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all">
+                                            Minggu
+                                        </button>
+                                        <button @click="sleepPeriod='month'; fetchSleepHistory()" 
+                                                :class="sleepPeriod==='month' ? 'shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand' : 'shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] text-lightText'"
+                                                class="px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all">
+                                            Bulan
+                                        </button>
+                                    </div>
+                                </div>
                                 <div class="overflow-x-auto bg-neuBg shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] rounded-2xl p-2 max-h-[300px] overflow-y-auto no-scrollbar">
                                     <table class="min-w-full text-xs text-left">
                                         <thead class="text-lightText font-bold border-b-2 border-white/30 sticky top-0 bg-neuBg/90 backdrop-blur-md">
@@ -214,6 +252,56 @@
                                 </div>
                             </div>
 
+                            {{-- Battery History Chart (NEW) --}}
+                            <div class="bg-neuBg rounded-[2.5rem] p-6 md:p-8 shadow-[8px_8px_16px_#a3b1c6,-8px_-8px_16px_#ffffff]">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-lg font-bold tracking-tight text-darkText">Riwayat Baterai</h3>
+                                    <div class="flex gap-2">
+                                        <button @click="batteryPeriod='today'; fetchBatteryHistory()" 
+                                                :class="batteryPeriod==='today' ? 'shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand' : 'shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] text-lightText'"
+                                                class="px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all">
+                                            Hari Ini
+                                        </button>
+                                        <button @click="batteryPeriod='week'; fetchBatteryHistory()" 
+                                                :class="batteryPeriod==='week' ? 'shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand' : 'shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] text-lightText'"
+                                                class="px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all">
+                                            Minggu
+                                        </button>
+                                        <button @click="batteryPeriod='month'; fetchBatteryHistory()" 
+                                                :class="batteryPeriod==='month' ? 'shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand' : 'shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] text-lightText'"
+                                                class="px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all">
+                                            Bulan
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                {{-- Battery Stats --}}
+                                <template x-if="batteryStats">
+                                    <div class="grid grid-cols-4 gap-2 mb-4">
+                                        <div class="bg-neuBg shadow-[inset_2px_2px_4px_#a3b1c6,inset_-2px_-2px_4px_#ffffff] px-3 py-2 rounded-xl text-center">
+                                            <div class="text-[9px] font-bold text-lightText uppercase mb-1">Rata-rata</div>
+                                            <div class="text-sm font-extrabold text-darkText" x-text="batteryStats.avg_percentage + '%'"></div>
+                                        </div>
+                                        <div class="bg-neuBg shadow-[inset_2px_2px_4px_#a3b1c6,inset_-2px_-2px_4px_#ffffff] px-3 py-2 rounded-xl text-center">
+                                            <div class="text-[9px] font-bold text-lightText uppercase mb-1">Min</div>
+                                            <div class="text-sm font-extrabold text-amber-500" x-text="batteryStats.min_voltage + 'V'"></div>
+                                        </div>
+                                        <div class="bg-neuBg shadow-[inset_2px_2px_4px_#a3b1c6,inset_-2px_-2px_4px_#ffffff] px-3 py-2 rounded-xl text-center">
+                                            <div class="text-[9px] font-bold text-lightText uppercase mb-1">Max</div>
+                                            <div class="text-sm font-extrabold text-green-500" x-text="batteryStats.max_voltage + 'V'"></div>
+                                        </div>
+                                        <div class="bg-neuBg shadow-[inset_2px_2px_4px_#a3b1c6,inset_-2px_-2px_4px_#ffffff] px-3 py-2 rounded-xl text-center">
+                                            <div class="text-[9px] font-bold text-lightText uppercase mb-1">Data</div>
+                                            <div class="text-sm font-extrabold text-brand" x-text="batteryStats.readings_count"></div>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <div class="w-full h-[250px]">
+                                    <canvas id="batteryChartCanvas"></canvas>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
 
@@ -238,8 +326,14 @@
                 deviceSessionsSummary: null,
                 deviceUsageHistory: [],
                 sleepHistory: [],
+                batteryHistory: [],
+                batteryStats: null,
                 chartObj: null,
                 irrigationChartObj: null,
+                batteryChartObj: null,
+                irrigationPeriod: 'today',
+                sleepPeriod: 'week',
+                batteryPeriod: 'week',
 
                 async initDetail() {
                     // Fetch all devices to find this specific node
@@ -256,6 +350,7 @@
                             this.fetchSessions(),
                             this.fetchHistory(),
                             this.fetchSleepHistory(),
+                            this.fetchBatteryHistory(),
                             this.fetchChartData()
                         ]);
                     } catch (e) {
@@ -267,7 +362,7 @@
 
                 async fetchSessions() {
                     try {
-                        const resp = await fetch(`/api/v1/devices/${this.deviceId}/irrigation/sessions`);
+                        const resp = await fetch(`/api/v1/devices/${this.deviceId}/irrigation/sessions?period=${this.irrigationPeriod}`);
                         if (resp.ok) {
                             const data = await resp.json();
                             this.deviceSessions = data.sessions || [];
@@ -289,10 +384,22 @@
 
                 async fetchSleepHistory() {
                     try {
-                        const resp = await fetch(`/api/v1/devices/${this.deviceId}/sleep-history`);
+                        const resp = await fetch(`/api/v1/devices/${this.deviceId}/sleep-history?period=${this.sleepPeriod}`);
                         if (resp.ok) {
                             const data = await resp.json();
                             this.sleepHistory = data.history || [];
+                        }
+                    } catch (e) { console.error(e); }
+                },
+
+                async fetchBatteryHistory() {
+                    try {
+                        const resp = await fetch(`/api/v1/devices/${this.deviceId}/battery-history?period=${this.batteryPeriod}`);
+                        if (resp.ok) {
+                            const data = await resp.json();
+                            this.batteryHistory = data.history || [];
+                            this.batteryStats = data.stats || null;
+                            this.renderBatteryChart();
                         }
                     } catch (e) { console.error(e); }
                 },
@@ -485,6 +592,127 @@
                                     beginAtZero: true,
                                     grid: { color: 'rgba(163, 177, 198, 0.2)', borderDash: [5, 5] },
                                     title: { display: true, text: 'Volume (Liter)', font: {weight: 'bold', size: 11} }
+                                }
+                            }
+                        }
+                    });
+                },
+
+                renderBatteryChart() {
+                    const ctx = document.getElementById('batteryChartCanvas');
+                    if(!ctx || !this.batteryHistory.length) return;
+                    
+                    if(this.batteryChartObj) {
+                        this.batteryChartObj.destroy();
+                    }
+
+                    // Sort by timestamp ascending for proper timeline
+                    const sortedHistory = [...this.batteryHistory].reverse();
+                    
+                    const labels = sortedHistory.map(b => {
+                        const date = new Date(b.recorded_at || b.timestamp);
+                        return date.toLocaleString('id-ID', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                    });
+                    const voltageData = sortedHistory.map(b => b.voltage);
+                    const percentageData = sortedHistory.map(b => b.percentage);
+
+                    Chart.defaults.color = '#7e8a9f';
+                    Chart.defaults.font.family = "'Inter', sans-serif";
+
+                    this.batteryChartObj = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: 'Voltase (V)',
+                                    data: voltageData,
+                                    borderColor: '#f59e0b',
+                                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                                    borderWidth: 3,
+                                    tension: 0.4,
+                                    pointBackgroundColor: '#E0E5EC',
+                                    pointBorderColor: '#f59e0b',
+                                    pointBorderWidth: 2,
+                                    pointRadius: 4,
+                                    pointHoverRadius: 6,
+                                    yAxisID: 'y',
+                                    fill: true
+                                },
+                                {
+                                    label: 'Persentase (%)',
+                                    data: percentageData,
+                                    borderColor: '#0ea5e9',
+                                    backgroundColor: 'rgba(14, 165, 233, 0.1)',
+                                    borderWidth: 3,
+                                    tension: 0.4,
+                                    pointBackgroundColor: '#E0E5EC',
+                                    pointBorderColor: '#0ea5e9',
+                                    pointBorderWidth: 2,
+                                    pointRadius: 4,
+                                    pointHoverRadius: 6,
+                                    yAxisID: 'y1',
+                                    fill: true
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            interaction: {
+                                mode: 'index',
+                                intersect: false,
+                            },
+                            plugins: {
+                                legend: {
+                                    position: 'top',
+                                    labels: {
+                                        usePointStyle: true,
+                                        padding: 15,
+                                        font: { weight: 'bold', size: 11 }
+                                    }
+                                },
+                                tooltip: {
+                                    backgroundColor: 'rgba(224, 229, 236, 0.95)',
+                                    titleColor: '#2b313b',
+                                    bodyColor: '#4b5563',
+                                    borderColor: 'rgba(255, 255, 255, 0.8)',
+                                    borderWidth: 1,
+                                    padding: 10,
+                                    cornerRadius: 10,
+                                    titleFont: { size: 12, weight: 'bold' },
+                                    bodyFont: { size: 11, weight: 'bold' },
+                                    callbacks: {
+                                        afterBody: function(context) {
+                                            const index = context[0].dataIndex;
+                                            const status = sortedHistory[index].status;
+                                            return 'Status: ' + status;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    grid: { display: false, drawBorder: false },
+                                    ticks: { maxTicksLimit: 8, font: { size: 9 } }
+                                },
+                                y: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'left',
+                                    grid: { color: 'rgba(163, 177, 198, 0.2)', borderDash: [5, 5] },
+                                    min: 3.0,
+                                    max: 4.3,
+                                    title: { display: true, text: 'Voltase (V)', font: {weight: 'bold', size: 11} }
+                                },
+                                y1: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'right',
+                                    grid: { display: false },
+                                    min: 0,
+                                    max: 100,
+                                    title: { display: true, text: 'Persentase (%)', font: {weight: 'bold', size: 11} }
                                 }
                             }
                         }

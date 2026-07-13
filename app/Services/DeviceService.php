@@ -52,118 +52,109 @@ class DeviceService
     }
 
     /**
-     * Get irrigation sessions for a specific device.
+     * Get irrigation sessions for a specific device with period filter
+     * @param string $period 'today', 'week', 'month'
      */
-    public function getIrrigationSessions(int|string $deviceId): array
+    public function getIrrigationSessions(int|string $deviceId, string $period = 'today'): array
     {
-        return $this->cacheService->remember(
-            "irrigation_sessions_{$deviceId}", 
-            CacheService::TTL_MEDIUM, 
-            function () use ($deviceId) {
-                $hasTable = \Illuminate\Support\Facades\Schema::hasTable('irrigation_logs');
-                if (!$hasTable) {
-                    return ['sessions' => [], 'summary' => null];
-                }
+        $hasTable = \Illuminate\Support\Facades\Schema::hasTable('irrigation_logs');
+        if (!$hasTable) {
+            return ['sessions' => [], 'summary' => null];
+        }
 
-                $sessions = \Illuminate\Support\Facades\DB::table('valve_logs')
-                    ->join('irrigation_logs', 'valve_logs.irrigation_log_id', '=', 'irrigation_logs.id')
-                    ->where('valve_logs.device_id', $deviceId)
-                    ->orderBy('irrigation_logs.started_at', 'desc')
-                    ->limit(20)
-                    ->select('irrigation_logs.id as session_id', 'irrigation_logs.started_at', 'irrigation_logs.ended_at', 'irrigation_logs.status', 'valve_logs.valve_status')
-                    ->get()
-                    ->toArray();
+        $dateRange = $this->getDateRange($period);
+        
+        $sessions = \Illuminate\Support\Facades\DB::table('valve_logs')
+            ->join('irrigation_logs', 'valve_logs.irrigation_log_id', '=', 'irrigation_logs.id')
+            ->where('valve_logs.device_id', $deviceId)
+            ->whereBetween('irrigation_logs.started_at', [$dateRange['start'], $dateRange['end']])
+            ->orderBy('irrigation_logs.started_at', 'desc')
+            ->limit(50)
+            ->select('irrigation_logs.id as session_id', 'irrigation_logs.started_at', 'irrigation_logs.ended_at', 'irrigation_logs.status', 'valve_logs.valve_status')
+            ->get()
+            ->toArray();
 
-                return [
-                    'sessions' => $sessions,
-                    'summary'  => ['total_sessions' => count($sessions)],
-                ];
-            }
-        );
+        return [
+            'sessions' => $sessions,
+            'summary'  => ['total_sessions' => count($sessions)],
+        ];
     }
 
     /**
-     * Get usage history (last 7 days) for a specific device.
+     * Get usage history for a specific device with period filter
+     * @param string $period 'today', 'week', 'month'
      */
-    public function getUsageHistory(int|string $deviceId): array
+    public function getUsageHistory(int|string $deviceId, string $period = 'week'): array
     {
-        return $this->cacheService->remember(
-            "usage_history_{$deviceId}", 
-            CacheService::TTL_MEDIUM, 
-            function () use ($deviceId) {
-                $hasTable = \Illuminate\Support\Facades\Schema::hasTable('irrigation_logs');
-                if (!$hasTable) {
-                    return ['history' => []];
-                }
+        $hasTable = \Illuminate\Support\Facades\Schema::hasTable('irrigation_logs');
+        if (!$hasTable) {
+            return ['history' => []];
+        }
 
-                $hasVolume = \Illuminate\Support\Facades\Schema::hasColumn('valve_logs', 'volume_ml');
-                $volumeSql = $hasVolume ? 'SUM(valve_logs.volume_ml)' : '0';
+        $dateRange = $this->getDateRange($period);
+        $hasVolume = \Illuminate\Support\Facades\Schema::hasColumn('valve_logs', 'volume_ml');
+        $volumeSql = $hasVolume ? 'SUM(valve_logs.volume_ml)' : '0';
 
-                $history = \Illuminate\Support\Facades\DB::table('valve_logs')
-                    ->join('irrigation_logs', 'valve_logs.irrigation_log_id', '=', 'irrigation_logs.id')
-                    ->where('valve_logs.device_id', $deviceId)
-                    ->where('irrigation_logs.started_at', '>=', Carbon::now()->subDays(7))
-                    ->groupByRaw('DATE(irrigation_logs.started_at)')
-                    ->orderByRaw('DATE(irrigation_logs.started_at) ASC')
-                    ->selectRaw('DATE(irrigation_logs.started_at) as date, COUNT(valve_logs.id) as count, ' . $volumeSql . ' as total_volume_ml')
-                    ->get()
-                    ->toArray();
+        $history = \Illuminate\Support\Facades\DB::table('valve_logs')
+            ->join('irrigation_logs', 'valve_logs.irrigation_log_id', '=', 'irrigation_logs.id')
+            ->where('valve_logs.device_id', $deviceId)
+            ->whereBetween('irrigation_logs.started_at', [$dateRange['start'], $dateRange['end']])
+            ->groupByRaw('DATE(irrigation_logs.started_at)')
+            ->orderByRaw('DATE(irrigation_logs.started_at) DESC')
+            ->selectRaw('DATE(irrigation_logs.started_at) as date, COUNT(valve_logs.id) as count, ' . $volumeSql . ' as total_volume_ml')
+            ->get()
+            ->toArray();
 
-                return [
-                    'history' => $history,
-                ];
-            }
-        );
+        return [
+            'history' => $history,
+        ];
     }
 
     /**
-     * Get sleep history for device (last 7 days)
+     * Get sleep history for device with period filter
      * Tracks when device enters/exits sleep mode
+     * @param string $period 'today', 'week', 'month'
      */
-    public function getSleepHistory(int|string $deviceId): array
+    public function getSleepHistory(int|string $deviceId, string $period = 'week'): array
     {
-        return $this->cacheService->remember(
-            "sleep_history_{$deviceId}",
-            CacheService::TTL_MEDIUM,
-            function () use ($deviceId) {
-                // Get sleep/wake events from sensor data
-                // Assumption: device is "sleeping" when there's a gap > 15 minutes between readings
-                $allReadings = SensorData::where('device_id', $deviceId)
-                    ->where('recorded_at', '>=', Carbon::now()->subDays(7))
-                    ->orderBy('recorded_at', 'asc')
-                    ->get(['recorded_at', 'battery_voltage']);
+        $dateRange = $this->getDateRange($period);
+        
+        // Get sleep/wake events from sensor data
+        // Assumption: device is "sleeping" when there's a gap > 15 minutes between readings
+        $allReadings = SensorData::where('device_id', $deviceId)
+            ->whereBetween('recorded_at', [$dateRange['start'], $dateRange['end']])
+            ->orderBy('recorded_at', 'asc')
+            ->get(['recorded_at', 'battery_voltage']);
 
-                $history = [];
-                $prevReading = null;
+        $history = [];
+        $prevReading = null;
 
-                foreach ($allReadings as $reading) {
-                    $currentTime = Carbon::parse($reading->recorded_at);
+        foreach ($allReadings as $reading) {
+            $currentTime = Carbon::parse($reading->recorded_at);
 
-                    if ($prevReading) {
-                        $prevTime = Carbon::parse($prevReading->recorded_at);
-                        $gapMinutes = $prevTime->diffInMinutes($currentTime);
+            if ($prevReading) {
+                $prevTime = Carbon::parse($prevReading->recorded_at);
+                $gapMinutes = $prevTime->diffInMinutes($currentTime);
 
-                        // If gap > 15 minutes, device was sleeping
-                        if ($gapMinutes > 15) {
-                            $durationMinutes = $gapMinutes;
+                // If gap > 15 minutes, device was sleeping
+                if ($gapMinutes > 15) {
+                    $durationMinutes = $gapMinutes;
 
-                            $history[] = [
-                                'sleep_start' => $prevTime->format('Y-m-d H:i:s'),
-                                'sleep_end' => $currentTime->format('Y-m-d H:i:s'),
-                                'duration_minutes' => $durationMinutes,
-                                'duration_formatted' => $this->formatDuration($durationMinutes),
-                                'battery_before' => $prevReading->battery_voltage ? (float) $prevReading->battery_voltage : null,
-                                'battery_after' => $reading->battery_voltage ? (float) $reading->battery_voltage : null,
-                            ];
-                        }
-                    }
-
-                    $prevReading = $reading;
+                    $history[] = [
+                        'sleep_start' => $prevTime->format('Y-m-d H:i:s'),
+                        'sleep_end' => $currentTime->format('Y-m-d H:i:s'),
+                        'duration_minutes' => $durationMinutes,
+                        'duration_formatted' => $this->formatDuration($durationMinutes),
+                        'battery_before' => $prevReading->battery_voltage ? (float) $prevReading->battery_voltage : null,
+                        'battery_after' => $reading->battery_voltage ? (float) $reading->battery_voltage : null,
+                    ];
                 }
-
-                return array_reverse($history); // Most recent first
             }
-        );
+
+            $prevReading = $reading;
+        }
+
+        return array_reverse($history); // Most recent first
     }
 
     /**
@@ -196,7 +187,7 @@ class DeviceService
             function () {
                 $devices = \Illuminate\Support\Facades\DB::table('devices')
                     ->where('is_active', true)
-                    ->orderBy('name')
+                    ->orderBy('id', 'asc')  // Order by node_id (id) ascending
                     ->get();
 
                 $result = [];
@@ -248,5 +239,111 @@ class DeviceService
         }
 
         return $result;
+    }
+
+    /**
+     * Get battery history with voltage and percentage
+     * @param string $period 'today', 'week', 'month'
+     */
+    public function getBatteryHistory(int|string $deviceId, string $period = 'week'): array
+    {
+        $dateRange = $this->getDateRange($period);
+        
+        // Get battery data from sensor readings
+        $readings = SensorData::where('device_id', $deviceId)
+            ->whereBetween('recorded_at', [$dateRange['start'], $dateRange['end']])
+            ->whereNotNull('battery_voltage')
+            ->orderBy('recorded_at', 'desc')
+            ->select('recorded_at', 'battery_voltage')
+            ->get();
+
+        $history = [];
+        $voltages = [];
+
+        foreach ($readings as $reading) {
+            $voltage = (float) $reading->battery_voltage;
+            $percentage = $this->calculateBatteryPercentage($voltage);
+            
+            $history[] = [
+                'recorded_at' => $reading->recorded_at,
+                'voltage' => round($voltage, 2),
+                'percentage' => $percentage,
+                'status' => $this->getBatteryStatus($percentage),
+                'timestamp' => Carbon::parse($reading->recorded_at)->format('Y-m-d H:i:s'),
+            ];
+
+            $voltages[] = $voltage;
+        }
+
+        // Calculate stats
+        $stats = null;
+        if (count($voltages) > 0) {
+            $stats = [
+                'avg_voltage' => round(array_sum($voltages) / count($voltages), 2),
+                'min_voltage' => round(min($voltages), 2),
+                'max_voltage' => round(max($voltages), 2),
+                'avg_percentage' => $this->calculateBatteryPercentage(array_sum($voltages) / count($voltages)),
+                'readings_count' => count($voltages),
+            ];
+        }
+
+        return [
+            'history' => $history,
+            'stats' => $stats,
+        ];
+    }
+
+    /**
+     * Calculate battery percentage from voltage
+     * LiPo battery: 3.0V (0%) to 4.2V (100%)
+     */
+    private function calculateBatteryPercentage(float $voltage): int
+    {
+        $minVoltage = 3.0;
+        $maxVoltage = 4.2;
+        
+        if ($voltage <= $minVoltage) return 0;
+        if ($voltage >= $maxVoltage) return 100;
+        
+        $percentage = (($voltage - $minVoltage) / ($maxVoltage - $minVoltage)) * 100;
+        return (int) round($percentage);
+    }
+
+    /**
+     * Get battery status label based on percentage
+     */
+    private function getBatteryStatus(int $percentage): string
+    {
+        if ($percentage >= 80) return 'Baik';
+        if ($percentage >= 50) return 'Cukup';
+        if ($percentage >= 20) return 'Rendah';
+        return 'Kritis';
+    }
+
+    /**
+     * Get date range based on period
+     */
+    private function getDateRange(string $period): array
+    {
+        $now = Carbon::now();
+        
+        return match($period) {
+            'today' => [
+                'start' => $now->copy()->startOfDay(),
+                'end' => $now->copy()->endOfDay(),
+            ],
+            'week' => [
+                'start' => $now->copy()->subDays(7)->startOfDay(),
+                'end' => $now->copy()->endOfDay(),
+            ],
+            'month' => [
+                'start' => $now->copy()->subDays(30)->startOfDay(),
+                'end' => $now->copy()->endOfDay(),
+            ],
+            default => [
+                'start' => $now->copy()->subDays(7)->startOfDay(),
+                'end' => $now->copy()->endOfDay(),
+            ],
+        };
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\DeviceService;
 use App\Services\CacheService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /**
  * Device Detail API Controller
@@ -23,20 +24,25 @@ class DeviceDetailController extends Controller
     }
 
     /**
-     * Get sleep history for device (last 7 days)
+     * Get sleep history for device with time period filter
+     * @param string $deviceId
+     * @param Request $request - period: 'today', 'week', 'month' (default: 'week')
      */
-    public function sleepHistory(string $deviceId): JsonResponse
+    public function sleepHistory(string $deviceId, Request $request): JsonResponse
     {
         try {
+            $period = $request->get('period', 'week');
+            
             $history = $this->cacheService->remember(
-                "device_sleep_history_{$deviceId}",
+                "device_sleep_history_{$deviceId}_{$period}",
                 CacheService::TTL_MEDIUM,
-                fn() => $this->deviceService->getSleepHistory($deviceId)
+                fn() => $this->deviceService->getSleepHistory($deviceId, $period)
             );
 
             return response()->json([
                 'success' => true,
                 'device_id' => $deviceId,
+                'period' => $period,
                 'history' => $history
             ]);
         } catch (\Exception $e) {
@@ -48,20 +54,25 @@ class DeviceDetailController extends Controller
     }
 
     /**
-     * Get irrigation sessions (today)
+     * Get irrigation sessions with time period filter
+     * @param string $deviceId
+     * @param Request $request - period: 'today', 'week', 'month' (default: 'today')
      */
-    public function irrigationSessions(string $deviceId): JsonResponse
+    public function irrigationSessions(string $deviceId, Request $request): JsonResponse
     {
         try {
+            $period = $request->get('period', 'today');
+            
             $data = $this->cacheService->remember(
-                "device_irrigation_sessions_{$deviceId}",
+                "device_irrigation_sessions_{$deviceId}_{$period}",
                 CacheService::TTL_MEDIUM,
-                fn() => $this->deviceService->getIrrigationSessions($deviceId)
+                fn() => $this->deviceService->getIrrigationSessions($deviceId, $period)
             );
 
             return response()->json([
                 'success' => true,
                 'device_id' => $deviceId,
+                'period' => $period,
                 'sessions' => $data['sessions'] ?? [],
                 'summary' => $data['summary'] ?? null
             ]);
@@ -115,6 +126,37 @@ class DeviceDetailController extends Controller
                 'device_id' => $deviceId,
                 'labels' => $data['labels'] ?? [],
                 'datasets' => $data['datasets'] ?? []
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get battery history with voltage and percentage
+     * @param string $deviceId
+     * @param Request $request - period: 'today', 'week', 'month' (default: 'week')
+     */
+    public function batteryHistory(string $deviceId, Request $request): JsonResponse
+    {
+        try {
+            $period = $request->get('period', 'week');
+            
+            $data = $this->cacheService->remember(
+                "device_battery_history_{$deviceId}_{$period}",
+                CacheService::TTL_MEDIUM,
+                fn() => $this->deviceService->getBatteryHistory($deviceId, $period)
+            );
+
+            return response()->json([
+                'success' => true,
+                'device_id' => $deviceId,
+                'period' => $period,
+                'history' => $data['history'] ?? [],
+                'stats' => $data['stats'] ?? null
             ]);
         } catch (\Exception $e) {
             return response()->json([

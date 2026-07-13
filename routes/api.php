@@ -48,12 +48,13 @@ Route::prefix('v1')->group(function () {
         Route::get('/json-backup', [DashboardApiController::class, 'getJsonBackup']);
     });
     
-    // Device detail endpoints
+    // Device Detail Endpoints (NEW - device-specific data)
     Route::prefix('devices/{deviceId}')->group(function () {
         Route::get('/sleep-history', [DeviceDetailController::class, 'sleepHistory']);
-        Route::get('/irrigation/sessions', [DeviceDetailController::class, 'irrigationSessions']);
+        Route::get('/irrigation-sessions', [DeviceDetailController::class, 'irrigationSessions']);
         Route::get('/usage-history', [DeviceDetailController::class, 'usageHistory']);
         Route::get('/chart-data', [DeviceDetailController::class, 'chartData']);
+        Route::get('/battery-history', [DeviceDetailController::class, 'batteryHistory']);
     });
     
     // Sensor Data Endpoints
