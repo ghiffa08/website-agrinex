@@ -48,12 +48,46 @@
                             </button>
                         </div>
 
-                        {{-- Loading State --}}
-                        <div x-show="loadingDevices" class="flex justify-center items-center py-10">
-                            <svg class="animate-spin h-10 w-10 text-brand" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
+                        {{-- Loading State - Skeleton --}}
+                        <div x-show="loadingDevices" class="space-y-8">
+                            <template x-for="areaIndex in [1, 2]" :key="areaIndex">
+                                <div>
+                                    {{-- Skeleton: Area Title --}}
+                                    <div class="h-4 w-32 bg-neuBg rounded-lg shadow-[inset_2px_2px_4px_#a3b1c6,inset_-2px_-2px_4px_#ffffff] mb-4 animate-pulse"></div>
+                                    
+                                    {{-- Skeleton: Device Cards Grid --}}
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        <template x-for="cardIndex in 3" :key="cardIndex">
+                                            <div class="bg-neuBg rounded-[2rem] p-5 shadow-[8px_8px_16px_#a3b1c6,-8px_-8px_16px_#ffffff] flex flex-col gap-6">
+                                                {{-- Skeleton: Header --}}
+                                                <div class="flex justify-between items-center">
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-9 h-9 rounded-xl bg-neuBg shadow-[inset_3px_3px_6px_#a3b1c6,inset_-3px_-3px_6px_#ffffff] animate-pulse"></div>
+                                                        <div class="h-5 w-24 bg-neuBg rounded-lg shadow-[inset_2px_2px_4px_#a3b1c6,inset_-2px_-2px_4px_#ffffff] animate-pulse"></div>
+                                                    </div>
+                                                    <div class="h-6 w-20 rounded-full bg-neuBg shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] animate-pulse"></div>
+                                                </div>
+                                                
+                                                {{-- Skeleton: Metrics Grid --}}
+                                                <div class="grid grid-cols-3 gap-3">
+                                                    <template x-for="metricIndex in 3" :key="metricIndex">
+                                                        <div class="bg-neuBg rounded-2xl p-3 shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] flex flex-col items-center justify-center">
+                                                            <div class="h-3 w-12 bg-neuBg rounded shadow-[inset_1px_1px_2px_#a3b1c6,inset_-1px_-1px_2px_#ffffff] mb-2 animate-pulse"></div>
+                                                            <div class="h-6 w-10 bg-neuBg rounded shadow-[inset_1px_1px_2px_#a3b1c6,inset_-1px_-1px_2px_#ffffff] animate-pulse"></div>
+                                                        </div>
+                                                    </template>
+                                                </div>
+
+                                                {{-- Skeleton: Footer --}}
+                                                <div class="flex justify-between items-center pt-4 border-t border-[#a3b1c6]/30">
+                                                    <div class="h-3 w-24 bg-neuBg rounded shadow-[inset_1px_1px_2px_#a3b1c6,inset_-1px_-1px_2px_#ffffff] animate-pulse"></div>
+                                                    <div class="h-8 w-20 rounded-xl bg-neuBg shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] animate-pulse"></div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
                         </div>
 
                         {{-- Devices List --}}
