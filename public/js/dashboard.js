@@ -23,8 +23,6 @@ function dashboard() {
         forecast24h: [],
         forecastWeekly: [],
         forecastView: '24h',
-        usage: [],
-        usage24h: [],
 
         calendarBase: new Date(),
         calendarDays: [],
@@ -105,102 +103,41 @@ function dashboard() {
             },
         },
 
-        loadingAll: true,
-        loadingCharts: false,
-        soilMoistureSensors: [
-            { id: 'SM1', label: 'SM1', color: '#3b82f6' },
-            { id: 'SM4', label: 'SM4', color: '#a855f7' },
-            { id: 'SM2', label: 'SM2', color: '#f97316' },
-            { id: 'SM3', label: 'SM3', color: '#eab308' },
-            { id: 'SM10', label: 'SM10', color: '#84cc16' },
-            { id: 'SM7', label: 'SM7', color: '#ef4444' },
-            { id: 'SM9', label: 'SM9', color: '#ec4899' },
-            { id: 'SM11', label: 'SM11', color: '#22d3ee' },
-            { id: 'SM6', label: 'SM6', color: '#9ca3af' },
-            { id: 'SM5', label: 'SM5', color: '#6366f1' },
-            { id: 'SM8', label: 'SM8', color: '#fb923c' },
-            { id: 'SM12', label: 'SM12', color: '#14b8a6' }
-        ],
-
-        weekLegend: [
-            { key: 'plowing', label: 'Olah Lahan', bg: 'bg-amber-600' },
-            { key: 'fert', label: 'Pemupukan', bg: 'bg-green-600' },
-            { key: 'ship', label: 'Pengiriman', bg: 'bg-yellow-400' },
-            { key: 'idle', label: 'Tidak ada', bg: 'bg-gray-200' }
-        ],
-
-        totalUsage() {
-            if (!this.usage || !this.usage.length) return '0.0';
-            return this.usage.reduce((accumulator, item) => accumulator + (parseFloat(item.total_l) || 0), 0).toFixed(1);
-        },
-        totalUsage24h() {
-            if (!this.usage24h || !this.usage24h.length) return '0.0';
-            return this.usage24h.reduce((accumulator, item) => accumulator + (parseFloat(item.total_l) || 0), 0).toFixed(1);
-        },
-        avgUsage() {
-            if (!this.usage || !this.usage.length) return '0.0';
-            return (this.totalUsage() / this.usage.length).toFixed(1);
-        },
-        avgUsage24h() {
-            if (!this.usage24h || !this.usage24h.length) return '0.0';
-            return (this.totalUsage24h() / this.usage24h.length).toFixed(1);
-        },
-        peakDay() {
-            if (!this.usage || !this.usage.length) return '-';
-            const peak = this.usage.reduce((max, curr) => parseFloat(curr.total_l) > parseFloat(max.total_l) ? curr : max);
-            return `${peak.usage_date} (${peak.total_l}L)`;
-        },
-        lowDay() {
-            if (!this.usage || !this.usage.length) return '-';
-            const low = this.usage.reduce((min, curr) => parseFloat(curr.total_l) < parseFloat(min.total_l) ? curr : min);
-            return `${low.usage_date} (${low.total_l}L)`;
-        },
-        peakHour24h() {
-            if (!this.usage24h || !this.usage24h.length) return '-';
-            const peak = this.usage24h.reduce((max, curr) => parseFloat(curr.total_l) > parseFloat(max.total_l) ? curr : max);
-            return `${peak.hour}:00 (${peak.total_l}L)`;
-        },
-        lowHour24h() {
-            if (!this.usage24h || !this.usage24h.length) return '-';
-            const low = this.usage24h.reduce((min, curr) => parseFloat(curr.total_l) < parseFloat(min.total_l) ? curr : min);
-            return `${low.hour}:00 (${low.total_l}L)`;
-        },
-
-        fmt(value, suffix = '') {
-            if (value == null) return '-';
-            const number = parseFloat(value);
-            return isNaN(number) ? '-' : number.toFixed(1) + suffix;
-        },
-        batteryDisplay(device) {
-            if (!device || device.battery_voltage_v == null) return '-';
-            const voltage = parseFloat(device.battery_voltage_v);
-            if (isNaN(voltage) || voltage <= 0) return '-';
-            const percentage = Math.max(0, Math.min(100, ((voltage - 3.3) / (4.2 - 3.3)) * 100));
-            return voltage.toFixed(2) + 'V (' + percentage.toFixed(0) + '%)';
-        },
-        batteryDisplayShort(device) {
-            if (!device || device.battery_voltage_v == null) return '-';
-            const voltage = parseFloat(device.battery_voltage_v);
-            if (isNaN(voltage) || voltage <= 0) return '-';
-            const percentage = Math.max(0, Math.min(100, ((voltage - 3.3) / (4.2 - 3.3)) * 100));
-            return percentage.toFixed(0) + '%';
-        },
-        tankFillColor() {
-            const percentage = this.tank?.percentage || 0;
-            if (percentage < 25) return '#dc2626';
-            if (percentage < 50) return '#f59e0b';
-            if (percentage < 75) return '#3b82f6';
-            return '#10b981';
-        },
-
         // --- Init ---
         init() {
             this.applyPersistedTheme();
             document.title = this.t('appTitle');
             this.startClock();
             this.loadEssential();
-            this.loadSecondary();
             this.startPolling();
+            
+            // Initialize maps after DOM is ready
+            this.$nextTick(() => {
+                setTimeout(() => {
+                    this.initLeaflet();
+                    this.initSatelliteMap();
+                }, 500);
+            });
+
+            if (window.Echo) {
+                window.Echo.channel('dashboard-channel')
+                    .listen('.TelemetryReceived', (e) => {
+                        // Telemetry received via WebSocket
+                        if (e.deviceData && e.deviceData.device_id) {
+                            let index = this.devices.findIndex(d => d.device_id === e.deviceData.device_id);
+                            if (index !== -1) {
+                                this.devices[index] = e.deviceData;
+                            } else {
+                                this.devices.push(e.deviceData);
+                            }
+                            this.computeTopMetrics();
+                        }
+                    })
+                    .listen('.IrrigationStatusUpdated', (e) => {
+                        // Irrigation status updated via WebSocket
+                        this.refreshIrrigationData();
+                    });
+            }
         },
 
         // Alias for backward compatibility
@@ -244,8 +181,9 @@ function dashboard() {
 
         // --- Polling ---
         startPolling() {
-            // Fast poll (devices + env) every 30s
-            setInterval(() => this.loadEssential(), 30000);
+            // Fast poll (devices + env) dimatikan, diganti WebSockets
+            // setInterval(() => this.loadEssential(), 30000);
+            
             // Slow poll (usage, schedule) every 5min
             setInterval(() => this.loadSecondary(), 300000);
         },
@@ -256,11 +194,7 @@ function dashboard() {
                 await Promise.all([this.loadDevices(), this.loadEnvStats()]);
                 this.computeTopMetrics();
                 this.lastUpdated = new Date();
-                this.loadingAll = false;
-            } catch (_) { 
-                this.fetchError = true; 
-                this.loadingAll = false;
-            }
+            } catch (_) { this.fetchError = true; }
         },
 
         async loadSecondary() {
@@ -664,6 +598,7 @@ function dashboard() {
             { key: 'wind', label: 'ANGIN', type: 'gauge', min: 0, max: 15, unit: 'm/s', value: null, display: '-', pct: 0, color: '#16a34a' },
             { key: 'rain', label: 'HUJAN', type: 'plain', min: 0, max: 50, unit: 'mm', value: null, display: '0.0mm', pct: 0, color: '#6366f1' },
             { key: 'battery', label: 'BATERAI', type: 'linear', min: 0, max: 100, unit: '%', value: null, display: '-', pct: 0, color: '#16a34a' },
+            { key: 'devices', label: 'DEVICE', type: 'plain', min: 0, max: 50, unit: '', value: null, display: '-', pct: 0, color: '#16a34a' },
         ],
 
         metricBy(k) { return this.topMetricCards.find(m => m.key === k); },
@@ -724,6 +659,9 @@ function dashboard() {
                 const bat = this.devices.map(d => d.battery_voltage_v != null ? Math.max(0,Math.min(100,((d.battery_voltage_v-3.3)/(4.2-3.3))*100)) : null).filter(v => v != null);
                 if (bat.length) this.updateMetric('battery', bat.reduce((a,b)=>a+b,0)/bat.length, bat.length+' node');
             }
+
+            // Device count
+            this.updateMetric('devices', this.devices.length, 'online');
         },
 
         // --- Usage Charts ---
@@ -775,13 +713,45 @@ function dashboard() {
         villageCenter: { lat: -6.9891469, lng: 108.6086561 },
         villagePolygon: [[-6.9869,108.6029],[-6.9878,108.6065],[-6.9889,108.6094],[-6.9903,108.6110],[-6.9920,108.6100],[-6.9910,108.6068],[-6.9898,108.6035]],
         leafletInited: false, leafletFullInited: false,
+        satelliteMap: null, satelliteLayer: null, satelliteProvider: 'esri',
 
         openFullMap() { this.showFullMap = true; this.$nextTick(() => this.initLeafletFull()); },
         closeFullMap() { this.showFullMap = false; },
         initLeaflet() { if (this.leafletInited || !window.L) return; const map = L.map('leafletMap', {zoomControl:true,attributionControl:false}).setView([this.villageCenter.lat,this.villageCenter.lng],15); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map); L.polygon(this.villagePolygon,{color:'#16a34a',weight:2,fillOpacity:0.08}).addTo(map); L.marker([this.villageCenter.lat,this.villageCenter.lng],{title:'Lokasi'}).addTo(map); this.leafletInited = true; },
         initLeafletFull() { if (this.leafletFullInited || !window.L) return; const map = L.map('leafletMapFull',{zoomControl:true}).setView([this.villageCenter.lat,this.villageCenter.lng],15); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map); L.polygon(this.villagePolygon,{color:'#15803d',weight:2,fillOpacity:0.1}).addTo(map); L.marker([this.villageCenter.lat,this.villageCenter.lng]).bindPopup('Pusat Lahan').addTo(map); this.leafletFullInited = true; },
+        
+        initSatelliteMap() {
+            if (!window.L || this.satelliteMap) return;
+            this.satelliteMap = L.map('satelliteMap', {zoomControl:true,attributionControl:false}).setView([-6.9863524,108.6008761],18);
+            this.satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Esri'}).addTo(this.satelliteMap);
+            L.marker([-6.9863524,108.6008761]).bindPopup('<b>Lokasi Sensor</b><br>Lahan Desa Geresik').addTo(this.satelliteMap);
+            L.circle([-6.9863524,108.6008761],{radius:50,color:'#16a34a',fillColor:'#16a34a',fillOpacity:0.15,weight:2}).addTo(this.satelliteMap);
+        },
+        
+        switchSatelliteLayer(provider) {
+            if (!this.satelliteMap || !this.satelliteLayer) return;
+            this.satelliteProvider = provider;
+            this.satelliteMap.removeLayer(this.satelliteLayer);
+            if (provider === 'esri') {
+                this.satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Esri'}).addTo(this.satelliteMap);
+            } else {
+                this.satelliteLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{maxZoom:20,attribution:'Google',subdomains:['mt0','mt1','mt2','mt3']}).addTo(this.satelliteMap);
+            }
+        },
 
         // --- Refresh ---
-        fetchDevices() { this.loadDevices(); this.loadEnvStats(); },
+        fetchDevices() { this.loadDevices(); this.loadEnvStats() },
+
+        // --- Irrigation Refresh ---
+        async refreshIrrigationData() {
+            // Refresh usage, schedule, and tank data after irrigation event
+            await Promise.allSettled([
+                this.loadUsage(),
+                this.loadUsageDaily(),
+                this.loadPlan(),
+                this.loadTank()
+            ]);
+            this.buildTasks();
+        },
     };
 }
