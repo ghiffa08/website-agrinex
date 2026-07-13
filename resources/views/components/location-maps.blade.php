@@ -1,19 +1,27 @@
 <!-- Location Maps Section -->
 <section class="grid lg:grid-cols-2 gap-8">
-    <!-- Street View Kiri -->
+    <!-- Satellite View Kiri (Leaflet) -->
     <div class="flex flex-col bg-neuBg shadow-[8px_8px_16px_#a3b1c6,-8px_-8px_16px_#ffffff] rounded-3xl p-6 md:p-8 group relative overflow-hidden">
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-xl font-bold tracking-tight text-darkText">Citra Satelit Lahan</h2>
-            <span class="text-[10px] font-bold px-3 py-1 rounded-xl bg-neuBg shadow-[inset_2px_2px_4px_#a3b1c6,inset_-2px_-2px_4px_#ffffff] text-brand">Live</span>
+            <div class="flex gap-2">
+                <button @click="switchSatelliteLayer('esri')" 
+                    :class="satelliteProvider === 'esri' ? 'shadow-[inset_2px_2px_4px_#a3b1c6,inset_-2px_-2px_4px_#ffffff]' : 'shadow-[2px_2px_4px_#a3b1c6,-2px_-2px_4px_#ffffff]'"
+                    class="text-[10px] font-bold px-3 py-1 rounded-xl bg-neuBg text-brand transition-all">
+                    Esri
+                </button>
+                <button @click="switchSatelliteLayer('google')" 
+                    :class="satelliteProvider === 'google' ? 'shadow-[inset_2px_2px_4px_#a3b1c6,inset_-2px_-2px_4px_#ffffff]' : 'shadow-[2px_2px_4px_#a3b1c6,-2px_-2px_4px_#ffffff]'"
+                    class="text-[10px] font-bold px-3 py-1 rounded-xl bg-neuBg text-brand transition-all">
+                    Google
+                </button>
+            </div>
         </div>
-        <div class="relative aspect-video w-full rounded-2xl overflow-hidden bg-neuBg shadow-[inset_6px_6px_10px_#a3b1c6,inset_-6px_-6px_10px_#ffffff] p-2">
-            <!-- Fixed Maps Embed (Satellite View) -->
-            <iframe class="w-full h-full rounded-xl" allowfullscreen loading="lazy"
-                referrerpolicy="no-referrer-when-downgrade"
-                allow="geolocation; accelerometer; gyroscope"
-                src="https://maps.google.com/maps?q=-6.9863524,108.6008761&t=k&z=18&ie=UTF8&iwloc=&output=embed"></iframe>
+        <div class="relative bg-neuBg shadow-[inset_6px_6px_10px_#a3b1c6,inset_-6px_-6px_10px_#ffffff] rounded-2xl p-2">
+            <div id="satelliteMap" class="w-full rounded-xl overflow-hidden" 
+                style="height:340px; min-height:300px; z-index: 1; position: relative;"></div>
             
-            <div class="absolute bottom-4 left-4 flex flex-wrap gap-2 pointer-events-none">
+            <div class="absolute bottom-4 left-4 flex flex-wrap gap-2 pointer-events-none z-10">
                 <template x-for="m in topMetricCards.filter(x=>['temp','humidity','light','wind'].includes(x.key))" :key="m.key">
                     <div class="bg-neuBg shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] text-[10px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-2 pointer-events-auto cursor-help"
                         :data-metric-chip="m.key">
@@ -24,7 +32,7 @@
             </div>
         </div>
         <p class="mt-4 text-xs font-medium text-lightText leading-relaxed">
-            Tampilan Citra Satelit area lahan di desa Geresik sebagai konteks lingkungan penempatan sensor. Arahkan kursor ke chip metric untuk melihat snapshot waktu.
+            Tampilan Citra Satelit interaktif area lahan di desa Geresik. Gunakan mouse untuk zoom & pan. Tanpa API key Google Maps.
         </p>
     </div>
     

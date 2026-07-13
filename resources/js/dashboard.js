@@ -110,6 +110,14 @@ function dashboard() {
             this.startClock();
             this.loadEssential();
             this.startPolling();
+            
+            // Initialize maps after DOM is ready
+            this.$nextTick(() => {
+                setTimeout(() => {
+                    this.initLeaflet();
+                    this.initSatelliteMap();
+                }, 500);
+            });
 
             if (window.Echo) {
                 window.Echo.channel('dashboard-channel')
@@ -705,11 +713,31 @@ function dashboard() {
         villageCenter: { lat: -6.9891469, lng: 108.6086561 },
         villagePolygon: [[-6.9869,108.6029],[-6.9878,108.6065],[-6.9889,108.6094],[-6.9903,108.6110],[-6.9920,108.6100],[-6.9910,108.6068],[-6.9898,108.6035]],
         leafletInited: false, leafletFullInited: false,
+        satelliteMap: null, satelliteLayer: null, satelliteProvider: 'esri',
 
         openFullMap() { this.showFullMap = true; this.$nextTick(() => this.initLeafletFull()); },
         closeFullMap() { this.showFullMap = false; },
         initLeaflet() { if (this.leafletInited || !window.L) return; const map = L.map('leafletMap', {zoomControl:true,attributionControl:false}).setView([this.villageCenter.lat,this.villageCenter.lng],15); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map); L.polygon(this.villagePolygon,{color:'#16a34a',weight:2,fillOpacity:0.08}).addTo(map); L.marker([this.villageCenter.lat,this.villageCenter.lng],{title:'Lokasi'}).addTo(map); this.leafletInited = true; },
         initLeafletFull() { if (this.leafletFullInited || !window.L) return; const map = L.map('leafletMapFull',{zoomControl:true}).setView([this.villageCenter.lat,this.villageCenter.lng],15); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map); L.polygon(this.villagePolygon,{color:'#15803d',weight:2,fillOpacity:0.1}).addTo(map); L.marker([this.villageCenter.lat,this.villageCenter.lng]).bindPopup('Pusat Lahan').addTo(map); this.leafletFullInited = true; },
+        
+        initSatelliteMap() {
+            if (!window.L || this.satelliteMap) return;
+            this.satelliteMap = L.map('satelliteMap', {zoomControl:true,attributionControl:false}).setView([-6.9863524,108.6008761],18);
+            this.satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Esri'}).addTo(this.satelliteMap);
+            L.marker([-6.9863524,108.6008761]).bindPopup('<b>Lokasi Sensor</b><br>Lahan Desa Geresik').addTo(this.satelliteMap);
+            L.circle([-6.9863524,108.6008761],{radius:50,color:'#16a34a',fillColor:'#16a34a',fillOpacity:0.15,weight:2}).addTo(this.satelliteMap);
+        },
+        
+        switchSatelliteLayer(provider) {
+            if (!this.satelliteMap || !this.satelliteLayer) return;
+            this.satelliteProvider = provider;
+            this.satelliteMap.removeLayer(this.satelliteLayer);
+            if (provider === 'esri') {
+                this.satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Esri'}).addTo(this.satelliteMap);
+            } else {
+                this.satelliteLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{maxZoom:20,attribution:'Google',subdomains:['mt0','mt1','mt2','mt3']}).addTo(this.satelliteMap);
+            }
+        },
 
         // --- Refresh ---
         fetchDevices() { this.loadDevices(); this.loadEnvStats() },
