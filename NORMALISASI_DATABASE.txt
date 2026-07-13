@@ -1,0 +1,185 @@
+================================================================================
+NORMALISASI DATABASE - AGRINEX SMART DRIP
+================================================================================
+Tanggal: 2026-07-14
+Status: SIAP EKSEKUSI
+
+================================================================================
+RINGKASAN PERUBAHAN
+================================================================================
+
+1. TABEL YANG AKAN DIHAPUS (9 tabel legacy):
+   - node (duplikat devices)
+   - sensor_node_data (duplikat sensor_data)
+   - sensor_weather_data (duplikat weather_data)
+   - getdata_logs (sistem lama)
+   - json_backup (backup lama)
+   - node_logs (log lama)
+   - irrigate_logs (diganti irrigation_logs)
+   - push_logs (tidak ada Model)
+   - data_sync_status (monitoring lama)
+
+2. STORED PROCEDURES DIHAPUS:
+   - sp_cleanup_old_data
+   - sp_get_session_details
+   - sp_get_statistics
+
+3. VIEWS DIHAPUS:
+   - v_daily_stats
+   - v_latest_sessions
+   - v_node_activity
+
+4. FOREIGN KEY DITAMBAHKAN:
+   devices → users, lahan_pantaus
+   sensor_data → devices, data_sessions (+ index)
+   weather_data → devices
+   device_logs → devices (+ index)
+   valve_logs → devices, irrigation_logs
+
+5. FILES UPDATED:
+   ✓ app/Services/CleanupService.php
+   ✓ app/Services/ExportService.php
+   ✓ app/Repositories/Eloquent/EloquentDeviceRepository.php
+   ✓ app/Repositories/Eloquent/EloquentSessionRepository.php
+   ✓ app/Models/LahanPantau.php
+   ✓ routes/web.php
+
+6. FILES AKAN DIHAPUS (via cleanup script):
+   - app/Models/Node.php
+   - app/Models/GetdataLog.php
+   - app/Models/JsonBackup.php
+   - app/Models/IrrigateLog.php
+   - app/Models/NodeLog.php
+   - app/Models/SensorNodeData.php
+   - app/Models/SensorWeatherData.php
+   - app/Http/Controllers/Admin/* (seluruh folder)
+   - app/Services/Admin/GetdataLogsService.php
+
+================================================================================
+LANGKAH EKSEKUSI (WAJIB URUT!)
+================================================================================
+
+STEP 1: BACKUP DATABASE
+------------------------
+mysqldump -u u802160697_ghiffa -p u802160697_agrinew > backup_$(date +%Y%m%d_%H%M%S).sql
+
+STEP 2: RUN MIGRATION
+---------------------
+php artisan migrate
+
+Expected output:
+  Running: 2026_07_14_000900_normalize_database_drop_legacy_tables
+  - Drop stored procedures (3)
+  - Drop views (3)
+  - Drop legacy tables (9)
+  - Add foreign keys (11)
+  - Add indexes (2)
+
+STEP 3: CLEANUP LEGACY FILES
+----------------------------
+bash database/cleanup_legacy_files.sh
+
+Expected:
+  Removed: 7 Model files
+  Removed: app/Http/Controllers/Admin/ folder
+  Removed: 1 Service file
+
+STEP 4: CLEAR CACHE
+-------------------
+php artisan optimize:clear
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+
+STEP 5: TEST APPLICATION
+-------------------------
+1. Akses dashboard: http://domain.com/
+2. Akses devices: http://domain.com/devices
+3. Akses node detail: http://domain.com/node/1
+4. Test API telemetry: POST /api/telemetry
+5. Cek tidak ada error 404 atau missing class
+
+================================================================================
+VERIFIKASI DATABASE
+================================================================================
+
+-- Cek tabel legacy sudah hilang
+SHOW TABLES;
+
+-- Cek foreign keys sudah ada
+SELECT 
+    TABLE_NAME,
+    CONSTRAINT_NAME,
+    REFERENCED_TABLE_NAME
+FROM information_schema.KEY_COLUMN_USAGE
+WHERE TABLE_SCHEMA = 'u802160697_agrinew'
+AND REFERENCED_TABLE_NAME IS NOT NULL
+ORDER BY TABLE_NAME;
+
+-- Cek indexes sudah ada
+SHOW INDEX FROM sensor_data WHERE Key_name = 'sensor_data_device_id_recorded_at_index';
+SHOW INDEX FROM device_logs WHERE Key_name = 'device_logs_device_id_logged_at_index';
+
+-- Cek data masih utuh
+SELECT COUNT(*) FROM devices; -- Expected: 5
+SELECT COUNT(*) FROM device_logs; -- Expected: 255
+SELECT COUNT(*) FROM data_sessions; -- Expected: 233
+
+================================================================================
+ROLLBACK PLAN (jika ada masalah)
+================================================================================
+
+mysql -u u802160697_ghiffa -p u802160697_agrinew < backup_YYYYMMDD_HHMMSS.sql
+
+ATAU via migration rollback:
+
+php artisan migrate:rollback --step=1
+
+NOTE: Rollback migration TIDAK akan recreate tabel legacy.
+      Harus restore dari SQL backup untuk recovery penuh.
+
+================================================================================
+PRODUCTION DATA SNAPSHOT (sebelum normalisasi)
+================================================================================
+
+devices: 5 entries
+  - SENDER_01, SENDER_02, SENDER_03, SENDER_04, SENDER_05
+
+device_logs: 255 entries
+  - Last entry: 2026-07-13 16:59:16
+  - Active monitoring dari ESP32
+
+data_sessions: 233 sessions
+  - Last session: 2026-07-13 16:59:16
+  - Session tracking aktif
+
+getdata_logs: 8 entries (LEGACY)
+  - Last entry: Mei 2026
+  - Sudah tidak dipakai
+
+sensor_node_data: 0 entries (LEGACY)
+  - Kosong, sudah tidak dipakai
+
+================================================================================
+DOKUMENTASI LENGKAP
+================================================================================
+
+File: DATABASE_NORMALIZATION.md
+Berisi detail lengkap tentang:
+- Overview perubahan
+- Struktur foreign keys
+- Impact analysis
+- Rollback procedures
+
+================================================================================
+STATUS: READY TO EXECUTE
+================================================================================
+
+Semua persiapan sudah selesai:
+✓ Migration file created
+✓ Cleanup script ready
+✓ Service/Repository updated
+✓ Routes cleaned
+✓ Documentation complete
+
+NEXT: Eksekusi STEP 1-5 di atas secara berurutan.

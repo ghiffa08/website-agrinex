@@ -7,13 +7,7 @@ use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\TestConnectionController;
 use App\Http\Controllers\Web\CleanupController;
 use App\Http\Controllers\Web\AgriNexDashboardController;
-use App\Http\Controllers\Admin\SensorNodeDataController;
-use App\Http\Controllers\Admin\WeatherDataController;
-use App\Http\Controllers\Admin\GetdataLogsController;
-use App\Http\Controllers\Admin\IrrigateLogsController;
-use App\Http\Controllers\Admin\ValveLogsController;
-use App\Http\Controllers\Admin\NodeLogsController;
-use App\Http\Controllers\Admin\JsonBackupController;
+// Admin controllers removed - legacy tables dropped
 use App\Http\Controllers\Web\SettingsController;
 use App\Http\Controllers\Web\NodesController;
 use App\Http\Controllers\Web\IrrigationController;
@@ -42,6 +36,16 @@ Route::get('/hostinger-optimize-artisan-route-99x', function () {
     \Illuminate\Support\Facades\Artisan::call('route:cache');
     \Illuminate\Support\Facades\Artisan::call('view:cache');
     return 'Hostinger optimization complete: config, routes, and views cached successfully.';
+});
+
+Route::get('/run-normalization-99x', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        $output = \Illuminate\Support\Facades\Artisan::output();
+        return "Database normalization (migration) completed successfully.<br><pre>" . htmlspecialchars($output) . "</pre>";
+    } catch (\Exception $e) {
+        return "Migration failed: " . htmlspecialchars($e->getMessage());
+    }
 });
 
 // Authentication Routes
@@ -126,57 +130,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/users/{id}/toggle-status', [SettingsController::class, 'toggleUserStatus'])->name('users.toggle-status');
     });
 
-    // Admin Data Management Routes - Admin and Operator only
-    Route::prefix('admin')->name('admin.')->middleware(['role:admin,operator'])->group(function () {
-        // Sensor Node Data
-        Route::get('/sensor-node-data', [SensorNodeDataController::class, 'index'])->name('sensor-node-data.index');
-        Route::get('/sensor-node-data/{id}', [SensorNodeDataController::class, 'show'])->name('sensor-node-data.show');
-        Route::get('/sensor-node-data/{id}/edit', [SensorNodeDataController::class, 'edit'])->name('sensor-node-data.edit');
-        Route::put('/sensor-node-data/{id}', [SensorNodeDataController::class, 'update'])->name('sensor-node-data.update');
-        Route::delete('/sensor-node-data/{id}', [SensorNodeDataController::class, 'destroy'])->name('sensor-node-data.destroy')->middleware(['role:admin']);
-        
-        // Weather Data
-        Route::get('/weather-data', [WeatherDataController::class, 'index'])->name('weather-data.index');
-        Route::get('/weather-data/{id}', [WeatherDataController::class, 'show'])->name('weather-data.show');
-        Route::get('/weather-data/{id}/edit', [WeatherDataController::class, 'edit'])->name('weather-data.edit');
-        Route::put('/weather-data/{id}', [WeatherDataController::class, 'update'])->name('weather-data.update');
-        Route::delete('/weather-data/{id}', [WeatherDataController::class, 'destroy'])->name('weather-data.destroy')->middleware(['role:admin']);
-        
-        // Getdata Logs
-        Route::get('/getdata-logs', [GetdataLogsController::class, 'index'])->name('getdata-logs.index');
-        Route::get('/getdata-logs/{id}', [GetdataLogsController::class, 'show'])->name('getdata-logs.show');
-        Route::get('/getdata-logs/{id}/edit', [GetdataLogsController::class, 'edit'])->name('getdata-logs.edit');
-        Route::put('/getdata-logs/{id}', [GetdataLogsController::class, 'update'])->name('getdata-logs.update');
-        Route::delete('/getdata-logs/{id}', [GetdataLogsController::class, 'destroy'])->name('getdata-logs.destroy')->middleware(['role:admin']);
-        
-        // Irrigate Logs
-        Route::get('/irrigate-logs', [IrrigateLogsController::class, 'index'])->name('irrigate-logs.index');
-        Route::get('/irrigate-logs/{id}', [IrrigateLogsController::class, 'show'])->name('irrigate-logs.show');
-        Route::get('/irrigate-logs/{id}/edit', [IrrigateLogsController::class, 'edit'])->name('irrigate-logs.edit');
-        Route::put('/irrigate-logs/{id}', [IrrigateLogsController::class, 'update'])->name('irrigate-logs.update');
-        Route::delete('/irrigate-logs/{id}', [IrrigateLogsController::class, 'destroy'])->name('irrigate-logs.destroy')->middleware(['role:admin']);
-        
-        // Valve Logs
-        Route::get('/valve-logs', [ValveLogsController::class, 'index'])->name('valve-logs.index');
-        Route::get('/valve-logs/{id}', [ValveLogsController::class, 'show'])->name('valve-logs.show');
-        Route::get('/valve-logs/{id}/edit', [ValveLogsController::class, 'edit'])->name('valve-logs.edit');
-        Route::put('/valve-logs/{id}', [ValveLogsController::class, 'update'])->name('valve-logs.update');
-        Route::delete('/valve-logs/{id}', [ValveLogsController::class, 'destroy'])->name('valve-logs.destroy')->middleware(['role:admin']);
-        
-        // Node Logs
-        Route::get('/node-logs', [NodeLogsController::class, 'index'])->name('node-logs.index');
-        Route::get('/node-logs/{id}', [NodeLogsController::class, 'show'])->name('node-logs.show');
-        Route::get('/node-logs/{id}/edit', [NodeLogsController::class, 'edit'])->name('node-logs.edit');
-        Route::put('/node-logs/{id}', [NodeLogsController::class, 'update'])->name('node-logs.update');
-        Route::delete('/node-logs/{id}', [NodeLogsController::class, 'destroy'])->name('node-logs.destroy')->middleware(['role:admin']);
-        
-        // JSON Backup
-        Route::get('/json-backup', [JsonBackupController::class, 'index'])->name('json-backup.index');
-        Route::get('/json-backup/{id}', [JsonBackupController::class, 'show'])->name('json-backup.show');
-        Route::get('/json-backup/{id}/edit', [JsonBackupController::class, 'edit'])->name('json-backup.edit');
-        Route::put('/json-backup/{id}', [JsonBackupController::class, 'update'])->name('json-backup.update');
-        Route::delete('/json-backup/{id}', [JsonBackupController::class, 'destroy'])->name('json-backup.destroy')->middleware(['role:admin']);
-    });
+    // Admin Data Management Routes removed - legacy system deprecated
+    // Use AgriNex dashboard for device and sensor data management
 });
 
 

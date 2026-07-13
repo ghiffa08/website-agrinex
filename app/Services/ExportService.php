@@ -2,23 +2,21 @@
 
 namespace App\Services;
 
-use App\Models\GetdataLog;
-use App\Models\IrrigateLog;
-use App\Models\SensorNodeData;
-use App\Models\SensorWeatherData;
-use App\Models\NodeLog;
+use App\Models\SensorData;
+use App\Models\WeatherData;
+use App\Models\DeviceLog;
 use App\Models\ValveLog;
+use App\Models\IrrigationLog;
 use Illuminate\Support\Facades\DB;
 
 class ExportService
 {
     protected $tables = [
-        'getdata_logs' => GetdataLog::class,
-        // 'irrigate_logs' => IrrigateLog::class,
-        'sensor_node_data' => SensorNodeData::class,
-        'sensor_weather_data' => SensorWeatherData::class,
-        'node_logs' => NodeLog::class,
-        // 'valve_logs' => ValveLog::class,
+        'sensor_data' => SensorData::class,
+        'weather_data' => WeatherData::class,
+        'device_logs' => DeviceLog::class,
+        'valve_logs' => ValveLog::class,
+        'irrigation_logs' => IrrigationLog::class,
     ];
 
     public function exportJson($table, $filters = [])

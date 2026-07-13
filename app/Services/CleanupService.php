@@ -2,12 +2,11 @@
 
 namespace App\Services;
 
-use App\Models\GetdataLog;
-use App\Models\IrrigateLog;
-use App\Models\SensorNodeData;
-use App\Models\SensorWeatherData;
-use App\Models\NodeLog;
+use App\Models\SensorData;
+use App\Models\WeatherData;
+use App\Models\DeviceLog;
 use App\Models\ValveLog;
+use App\Models\IrrigationLog;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -28,29 +27,23 @@ class CleanupService
                 'deleted_counts' => []
             ];
 
-            // Delete old sensor_node_data
-            $deletedNodeData = SensorNodeData::where('created_at', '<', $cutoffDate)->delete();
-            $result['deleted_counts']['sensor_node_data'] = $deletedNodeData;
+            // Delete old sensor_data
+            $deletedSensorData = SensorData::where('recorded_at', '<', $cutoffDate)->delete();
+            $result['deleted_counts']['sensor_data'] = $deletedSensorData;
 
-            // Delete old sensor_weather_data
-            $deletedWeatherData = SensorWeatherData::where('created_at', '<', $cutoffDate)->delete();
-            $result['deleted_counts']['sensor_weather_data'] = $deletedWeatherData;
+            // Delete old weather_data
+            $deletedWeatherData = WeatherData::where('recorded_at', '<', $cutoffDate)->delete();
+            $result['deleted_counts']['weather_data'] = $deletedWeatherData;
 
-            // Delete old node_logs
-            $deletedNodeLogs = NodeLog::where('created_at', '<', $cutoffDate)->delete();
-            $result['deleted_counts']['node_logs'] = $deletedNodeLogs;
+            // Delete old device_logs
+            $deletedDeviceLogs = DeviceLog::where('logged_at', '<', $cutoffDate)->delete();
+            $result['deleted_counts']['device_logs'] = $deletedDeviceLogs;
 
-            // Delete old valve_logs
-            $deletedValveLogs = ValveLog::where('created_at', '<', $cutoffDate)->delete();
+            // Delete old valve_logs (orphaned only, keep those with irrigation_logs)
+            $deletedValveLogs = ValveLog::whereNull('irrigation_log_id')
+                ->where('created_at', '<', $cutoffDate)
+                ->delete();
             $result['deleted_counts']['valve_logs'] = $deletedValveLogs;
-
-            // Delete old getdata_logs
-            $deletedGetdataLogs = GetdataLog::where('created_at', '<', $cutoffDate)->delete();
-            $result['deleted_counts']['getdata_logs'] = $deletedGetdataLogs;
-
-            // Delete old irrigate_logs
-            $deletedIrrigateLogs = IrrigateLog::where('created_at', '<', $cutoffDate)->delete();
-            $result['deleted_counts']['irrigate_logs'] = $deletedIrrigateLogs;
 
             $result['total_deleted'] = array_sum($result['deleted_counts']);
 
@@ -69,28 +62,37 @@ class CleanupService
                 'deleted_counts' => []
             ];
 
-            // Delete sensor data without getdata logs
-            $deletedOrphanedSensorData = SensorNodeData::whereNotExists(function($query) {
+            // Delete sensor data without devices
+            $deletedOrphanedSensorData = SensorData::whereNotExists(function($query) {
                 $query->select(DB::raw(1))
-                    ->from('getdata_logs')
-                    ->whereRaw('getdata_logs.sesi_id_getdata = sensor_node_data.sesi_id_getdata');
+                    ->from('devices')
+                    ->whereRaw('devices.id = sensor_data.device_id');
             })->delete();
-            $result['deleted_counts']['orphaned_sensor_node_data'] = $deletedOrphanedSensorData;
+            $result['deleted_counts']['orphaned_sensor_data'] = $deletedOrphanedSensorData;
 
-            // Delete weather data without getdata logs
-            $deletedOrphanedWeatherData = SensorWeatherData::whereNotExists(function($query) {
+            // Delete weather data without devices
+            $deletedOrphanedWeatherData = WeatherData::whereNotExists(function($query) {
                 $query->select(DB::raw(1))
-                    ->from('getdata_logs')
-                    ->whereRaw('getdata_logs.sesi_id_getdata = sensor_weather_data.sesi_id_getdata');
+                    ->from('devices')
+                    ->whereRaw('devices.id = weather_data.device_id');
             })->delete();
-            $result['deleted_counts']['orphaned_sensor_weather_data'] = $deletedOrphanedWeatherData;
+            $result['deleted_counts']['orphaned_weather_data'] = $deletedOrphanedWeatherData;
 
-            // Delete valve logs without irrigate logs
-            $deletedOrphanedValveLogs = ValveLog::whereNotExists(function($query) {
+            // Delete device logs without devices
+            $deletedOrphanedDeviceLogs = DeviceLog::whereNotExists(function($query) {
                 $query->select(DB::raw(1))
-                    ->from('irrigate_logs')
-                    ->whereRaw('irrigate_logs.sesi_id_irrigate = valve_logs.sesi_id_irrigate');
+                    ->from('devices')
+                    ->whereRaw('devices.id = device_logs.device_id');
             })->delete();
+            $result['deleted_counts']['orphaned_device_logs'] = $deletedOrphanedDeviceLogs;
+
+            // Delete valve logs without irrigation logs
+            $deletedOrphanedValveLogs = ValveLog::whereNotNull('irrigation_log_id')
+                ->whereNotExists(function($query) {
+                    $query->select(DB::raw(1))
+                        ->from('irrigation_logs')
+                        ->whereRaw('irrigation_logs.id = valve_logs.irrigation_log_id');
+                })->delete();
             $result['deleted_counts']['orphaned_valve_logs'] = $deletedOrphanedValveLogs;
 
             $result['total_deleted'] = array_sum($result['deleted_counts']);
@@ -101,26 +103,16 @@ class CleanupService
         });
     }
 
-    public function optimizeTables()
+    public function getStatistics()
     {
-        $tables = [
-            'getdata_logs',
-            'irrigate_logs',
-            'sensor_node_data',
-            'sensor_weather_data',
-            'node_logs',
-            'valve_logs'
+        return [
+            'sensor_data' => SensorData::count(),
+            'weather_data' => WeatherData::count(),
+            'device_logs' => DeviceLog::count(),
+            'valve_logs' => ValveLog::count(),
+            'irrigation_logs' => IrrigationLog::count(),
+            'oldest_sensor_data' => SensorData::oldest('recorded_at')->value('recorded_at'),
+            'latest_sensor_data' => SensorData::latest('recorded_at')->value('recorded_at'),
         ];
-
-        $result = [];
-
-        foreach ($tables as $table) {
-            DB::statement("OPTIMIZE TABLE `$table`");
-            $result[$table] = 'optimized';
-        }
-
-        Log::info('Tables optimized', $result);
-
-        return $result;
     }
 }

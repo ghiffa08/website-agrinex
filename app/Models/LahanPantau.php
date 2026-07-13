@@ -2,19 +2,24 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class LahanPantau extends Model
 {
-    protected $fillable = ['nama_lahan', 'lokasi', 'deskripsi', 'image_url'];
+    use HasFactory;
 
+    protected $guarded = ['id'];
+
+    // Updated: now uses devices table instead of legacy node table
     public function devices()
     {
-        return $this->hasMany(Device::class);
+        return $this->hasMany(Device::class, 'lahan_pantau_id');
     }
-
+    
+    // Alias for backward compatibility
     public function nodes()
     {
-        return $this->hasMany(Node::class);
+        return $this->devices();
     }
 }

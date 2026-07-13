@@ -3,7 +3,6 @@
 namespace App\Repositories\Eloquent;
 
 use App\Models\DataSession;
-use App\Models\GetdataLog;
 use App\Repositories\Contracts\SessionRepositoryInterface;
 
 class EloquentSessionRepository implements SessionRepositoryInterface
@@ -18,7 +17,13 @@ class EloquentSessionRepository implements SessionRepositoryInterface
 
     public function createGetdataLog(array $data)
     {
-        return GetdataLog::create($data);
+        // Legacy method - now uses DataSession
+        return DataSession::create([
+            'session_id' => $data['sesi_id_getdata'] ?? null,
+            'started_at' => $data['waktu_mulai'] ?? now(),
+            'ended_at' => $data['waktu_selesai'] ?? null,
+            'status' => 'completed',
+        ]);
     }
 
     public function getLatestSession()
@@ -28,19 +33,19 @@ class EloquentSessionRepository implements SessionRepositoryInterface
 
     public function getSessionsInRange($startTime, $endTime = null)
     {
-        $query = GetdataLog::where('waktu_mulai', '>=', $startTime);
+        $query = DataSession::where('started_at', '>=', $startTime);
         if ($endTime) {
-            $query->where('waktu_mulai', '<=', $endTime);
+            $query->where('started_at', '<=', $endTime);
         }
-        return $query->with(['sensorWeatherData', 'sensorNodeData'])
-            ->orderBy('waktu_mulai', 'asc')
+        return $query->with(['sensorData', 'weatherData'])
+            ->orderBy('started_at', 'asc')
             ->get();
     }
 
     public function getSessionsWithLimit($limit)
     {
-        return GetdataLog::with(['sensorWeatherData', 'sensorNodeData'])
-            ->orderBy('waktu_mulai', 'desc')
+        return DataSession::with(['sensorData', 'weatherData'])
+            ->orderBy('started_at', 'desc')
             ->limit($limit)
             ->get()
             ->reverse();
