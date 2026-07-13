@@ -41,12 +41,67 @@
                 {{-- Page content --}}
                 <main class="flex-1 px-4 md:px-6 xl:px-8 pt-6 pb-28 md:pb-10 w-full max-w-[1400px] mx-auto space-y-6 md:space-y-8">
                     
-                    {{-- Loading State --}}
-                    <div x-show="loading" class="flex justify-center items-center py-20">
-                        <svg class="animate-spin h-10 w-10 text-brand" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
+                    {{-- Loading State - Skeleton --}}
+                    <div x-show="loading" class="space-y-6 md:space-y-8">
+                        {{-- Skeleton: Stats Cards --}}
+                        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                            {{-- Status Card Skeleton --}}
+                            <div class="bg-neuBg rounded-[2rem] p-6 shadow-[8px_8px_16px_#a3b1c6,-8px_-8px_16px_#ffffff] flex flex-col justify-center">
+                                <div class="h-4 w-32 bg-neuBg rounded-lg shadow-[inset_2px_2px_4px_#a3b1c6,inset_-2px_-2px_4px_#ffffff] mb-4 animate-pulse"></div>
+                                <div class="h-6 w-20 bg-neuBg rounded-full shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] mb-4 animate-pulse"></div>
+                                <div class="h-3 w-24 bg-neuBg rounded shadow-[inset_1px_1px_2px_#a3b1c6,inset_-1px_-1px_2px_#ffffff] animate-pulse"></div>
+                            </div>
+                            
+                            {{-- Metrics Skeleton --}}
+                            <div class="lg:col-span-3 grid grid-cols-3 gap-4 md:gap-6">
+                                <template x-for="i in 3" :key="i">
+                                    <div class="bg-neuBg rounded-[2rem] p-5 shadow-[8px_8px_16px_#a3b1c6,-8px_-8px_16px_#ffffff] flex flex-col items-center justify-center">
+                                        <div class="h-3 w-16 bg-neuBg rounded shadow-[inset_1px_1px_2px_#a3b1c6,inset_-1px_-1px_2px_#ffffff] mb-2 animate-pulse"></div>
+                                        <div class="h-8 w-12 bg-neuBg rounded shadow-[inset_2px_2px_4px_#a3b1c6,inset_-2px_-2px_4px_#ffffff] animate-pulse"></div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        {{-- Skeleton: Charts --}}
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <template x-for="i in 2" :key="i">
+                                <div class="bg-neuBg rounded-[2.5rem] p-6 md:p-8 shadow-[8px_8px_16px_#a3b1c6,-8px_-8px_16px_#ffffff]">
+                                    <div class="flex items-center justify-between mb-6">
+                                        <div class="h-5 w-40 bg-neuBg rounded-lg shadow-[inset_2px_2px_4px_#a3b1c6,inset_-2px_-2px_4px_#ffffff] animate-pulse"></div>
+                                        <div class="flex gap-2">
+                                            <div class="h-6 w-16 rounded-xl bg-neuBg shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] animate-pulse"></div>
+                                            <div class="h-6 w-16 rounded-xl bg-neuBg shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] animate-pulse"></div>
+                                        </div>
+                                    </div>
+                                    <div class="w-full h-[300px] bg-neuBg rounded-2xl shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] animate-pulse"></div>
+                                </div>
+                            </template>
+                        </div>
+
+                        {{-- Skeleton: Tables --}}
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <template x-for="i in 3" :key="i">
+                                <div class="bg-neuBg rounded-[2.5rem] p-6 md:p-8 shadow-[8px_8px_16px_#a3b1c6,-8px_-8px_16px_#ffffff]">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <div class="h-5 w-40 bg-neuBg rounded-lg shadow-[inset_2px_2px_4px_#a3b1c6,inset_-2px_-2px_4px_#ffffff] animate-pulse"></div>
+                                        <div class="flex gap-2">
+                                            <div class="h-5 w-12 rounded-lg bg-neuBg shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] animate-pulse"></div>
+                                            <div class="h-5 w-12 rounded-lg bg-neuBg shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] animate-pulse"></div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-neuBg shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] rounded-2xl p-4 space-y-3">
+                                        <template x-for="row in 5" :key="row">
+                                            <div class="flex justify-between items-center">
+                                                <div class="h-3 w-20 bg-neuBg rounded shadow-[inset_1px_1px_2px_#a3b1c6,inset_-1px_-1px_2px_#ffffff] animate-pulse"></div>
+                                                <div class="h-3 w-16 bg-neuBg rounded shadow-[inset_1px_1px_2px_#a3b1c6,inset_-1px_-1px_2px_#ffffff] animate-pulse"></div>
+                                                <div class="h-3 w-12 bg-neuBg rounded shadow-[inset_1px_1px_2px_#a3b1c6,inset_-1px_-1px_2px_#ffffff] animate-pulse"></div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
                     </div>
 
                     <div x-show="!loading" class="space-y-6 md:space-y-8">

@@ -130,42 +130,35 @@ class DeviceService
         try {
             $dateRange = $this->getDateRange($period);
             
-            // Get sleep/wake events from sensor data
-            // Assumption: device is "sleeping" when there's a gap > 15 minutes between readings
-            $allReadings = SensorData::where('device_id', $deviceId)
+            // Get sleep data from adaptive_sleep_duration field in sensor_data
+            $readings = SensorData::where('device_id', $deviceId)
                 ->whereBetween('recorded_at', [$dateRange['start'], $dateRange['end']])
-                ->orderBy('recorded_at', 'asc')
-                ->get(['recorded_at', 'battery_voltage']);
+                ->whereNotNull('adaptive_sleep_duration')
+                ->where('adaptive_sleep_duration', '>', 0)
+                ->orderBy('recorded_at', 'desc')
+                ->select('recorded_at', 'adaptive_sleep_duration', 'voltage_v', 'battery_pct')
+                ->get();
 
             $history = [];
-            $prevReading = null;
 
-            foreach ($allReadings as $reading) {
-                $currentTime = Carbon::parse($reading->recorded_at);
+            foreach ($readings as $reading) {
+                $sleepDurationSeconds = (int) $reading->adaptive_sleep_duration;
+                $sleepDurationMinutes = round($sleepDurationSeconds / 60);
+                
+                $wakeTime = Carbon::parse($reading->recorded_at);
+                $sleepTime = $wakeTime->copy()->subSeconds($sleepDurationSeconds);
 
-                if ($prevReading) {
-                    $prevTime = Carbon::parse($prevReading->recorded_at);
-                    $gapMinutes = $prevTime->diffInMinutes($currentTime);
-
-                    // If gap > 15 minutes, device was sleeping
-                    if ($gapMinutes > 15) {
-                        $durationMinutes = $gapMinutes;
-
-                        $history[] = [
-                            'sleep_start' => $prevTime->format('Y-m-d H:i:s'),
-                            'sleep_end' => $currentTime->format('Y-m-d H:i:s'),
-                            'duration_minutes' => $durationMinutes,
-                            'duration_formatted' => $this->formatDuration($durationMinutes),
-                            'battery_before' => $prevReading->battery_voltage ? (float) $prevReading->battery_voltage : null,
-                            'battery_after' => $reading->battery_voltage ? (float) $reading->battery_voltage : null,
-                        ];
-                    }
-                }
-
-                $prevReading = $reading;
+                $history[] = [
+                    'sleep_start' => $sleepTime->format('Y-m-d H:i:s'),
+                    'sleep_end' => $wakeTime->format('Y-m-d H:i:s'),
+                    'duration_minutes' => $sleepDurationMinutes,
+                    'duration_formatted' => $this->formatDuration($sleepDurationMinutes),
+                    'battery_voltage' => $reading->voltage_v ? (float) $reading->voltage_v : null,
+                    'battery_pct' => $reading->battery_pct ? (int) $reading->battery_pct : null,
+                ];
             }
 
-            return array_reverse($history); // Most recent first
+            return $history;
         } catch (\Exception $e) {
             \Log::error("Error fetching sleep history for device {$deviceId}: " . $e->getMessage());
             return [];
@@ -265,25 +258,27 @@ class DeviceService
         try {
             $dateRange = $this->getDateRange($period);
             
-            // Get battery data from sensor readings
+            // Get battery data from sensor_data table with new fields
             $readings = SensorData::where('device_id', $deviceId)
                 ->whereBetween('recorded_at', [$dateRange['start'], $dateRange['end']])
-                ->whereNotNull('battery_voltage')
+                ->whereNotNull('voltage_v')
                 ->orderBy('recorded_at', 'desc')
-                ->select('recorded_at', 'battery_voltage')
+                ->select('recorded_at', 'voltage_v', 'battery_pct', 'current_ma', 'power_mw')
                 ->get();
 
             $history = [];
             $voltages = [];
 
             foreach ($readings as $reading) {
-                $voltage = (float) $reading->battery_voltage;
-                $percentage = $this->calculateBatteryPercentage($voltage);
+                $voltage = (float) $reading->voltage_v;
+                $percentage = $reading->battery_pct ? (int) $reading->battery_pct : $this->calculateBatteryPercentage($voltage);
                 
                 $history[] = [
                     'recorded_at' => $reading->recorded_at,
                     'voltage' => round($voltage, 2),
                     'percentage' => $percentage,
+                    'current_ma' => $reading->current_ma ? round((float) $reading->current_ma, 2) : null,
+                    'power_mw' => $reading->power_mw ? round((float) $reading->power_mw, 2) : null,
                     'status' => $this->getBatteryStatus($percentage),
                     'timestamp' => Carbon::parse($reading->recorded_at)->format('Y-m-d H:i:s'),
                 ];
