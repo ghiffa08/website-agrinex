@@ -67,7 +67,7 @@ class SensorDataController extends Controller
 
             \Illuminate\Support\Facades\Cache::forget('dashboard_devices_repo');
             \Illuminate\Support\Facades\Cache::forget('dashboard_weather_repo');
-            broadcast(new \App\Events\DashboardDataUpdated());
+            \Illuminate\Support\Facades\Cache::put('dashboard_last_update', now()->timestamp, 300);
 
             Log::info('Data processed successfully', [
                 'sesi_id' => $result['sesi_id_getdata'],

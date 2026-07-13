@@ -137,4 +137,11 @@ class SensorDataService
         }
         return $this->sensorRepo->getLatestForDevices();
     }
+
+    public function getLatestWeatherData()
+    {
+        return \Illuminate\Support\Facades\Cache::remember('dashboard_weather_repo', 60, function () {
+            return $this->weatherRepo->getLatestWeatherData();
+        });
+    }
 }

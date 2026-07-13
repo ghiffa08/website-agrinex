@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\DataIngestionController;
 use App\Http\Controllers\Api\WeatherController;
 use App\Http\Controllers\Api\DeviceController;
 use App\Http\Controllers\Api\TelemetryApiController;
+use App\Http\Controllers\Api\DashboardPollingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,6 +35,8 @@ Route::prefix('v1')->group(function () {
     
     // Dashboard Endpoints (NEW - for web dashboard)
     Route::prefix('dashboard')->middleware(['throttle:polling'])->group(function () {
+        Route::get('/poll', [DashboardPollingController::class, 'poll']);
+        Route::get('/poll-status', [DashboardPollingController::class, 'pollStatus']);
         Route::get('/devices', [DashboardApiController::class, 'getDevices']);
         Route::get('/tank', [DashboardApiController::class, 'getTank']);
         Route::get('/schedule', [DashboardApiController::class, 'getSchedule']);

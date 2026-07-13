@@ -1,0 +1,194 @@
+================================================================================
+PANDUAN DEPLOYMENT LARAVEL REVERB KE HOSTINGER
+AgriNex SmartDrip - smartdrip-system.agrinex.io
+================================================================================
+
+📦 FILE YANG SUDAH DISIAPKAN (lokal):
+  ✓ .env (updated dengan domain production)
+  ✓ public/build/ (Vite bundle dengan VITE_REVERB_HOST=smartdrip-system.agrinex.io)
+  ✓ nginx-reverb.conf (reverse proxy config)
+  ✓ reverb-smartdrip.service (systemd service)
+
+================================================================================
+LANGKAH 1: UPLOAD FILE KE HOSTINGER
+================================================================================
+
+1a. Buat arsip deployment (di lokal):
+    cd /home/ghiffa/Documents/Projects_IoT/PlatformIO_Workspace/Projects/agrinex-smartdrip
+    tar -czf smartdrip-deploy-$(date +%Y%m%d-%H%M).tar.gz .env public/build/
+
+1b. Upload ke Hostinger via SCP/SFTP:
+    scp smartdrip-deploy-*.tar.gz user@smartdrip-system.agrinex.io:/home/user/
+    
+    ATAU via File Manager Hostinger dashboard.
+
+1c. SSH ke server Hostinger, ekstrak:
+    ssh user@smartdrip-system.agrinex.io
+    cd /home/user/domains/smartdrip-system.agrinex.io/public_html
+    tar -xzf ~/smartdrip-deploy-*.tar.gz
+    
+    PERHATIKAN: Pastikan path sesuai struktur Hostinger Anda!
+
+================================================================================
+LANGKAH 2: KONFIGURASI LARAVEL DI SERVER
+================================================================================
+
+2a. Clear & cache config:
+    cd /home/user/domains/smartdrip-system.agrinex.io/public_html
+    php artisan config:clear
+    php artisan config:cache
+
+2b. Verifikasi .env di-load dengan benar:
+    php artisan tinker
+    >>> config('broadcasting.connections.reverb.options.host')
+    => "smartdrip-system.agrinex.io"
+    >>> exit
+
+2c. Set permission (jika diperlukan):
+    chmod -R 755 storage bootstrap/cache
+    chown -R www-data:www-data storage bootstrap/cache
+
+================================================================================
+LANGKAH 3: SETUP NGINX REVERSE PROXY
+================================================================================
+
+3a. Upload /tmp/nginx-reverb.conf ke server (via SCP atau copy manual)
+
+3b. Edit site config Nginx utama (biasanya di /etc/nginx/sites-available/):
+    sudo nano /etc/nginx/sites-available/smartdrip-system.agrinex.io
+    
+    TAMBAHKAN di dalam blok server { listen 443 ssl; ... }:
+    
+    # WebSocket untuk Reverb
+    location /app/ {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 86400s;
+        proxy_send_timeout 86400s;
+        proxy_buffering off;
+    }
+
+3c. Test & reload Nginx:
+    sudo nginx -t
+    sudo systemctl reload nginx
+
+CATATAN HOSTINGER: Jika Anda menggunakan cPanel/Hostinger control panel,
+reverse proxy mungkin dikonfigurasi via UI, bukan file manual.
+
+================================================================================
+LANGKAH 4: JALANKAN REVERB SERVER
+================================================================================
+
+OPSI A: Manual (untuk testing):
+    cd /home/user/domains/smartdrip-system.agrinex.io/public_html
+    nohup php artisan reverb:start \
+        --host=127.0.0.1 \
+        --port=8080 \
+        --hostname=smartdrip-system.agrinex.io \
+        > storage/logs/reverb.log 2>&1 &
+    
+    echo $! > storage/reverb.pid
+
+OPSI B: Systemd Service (production, auto-restart):
+    # Upload /tmp/reverb-smartdrip.service ke server
+    # Edit path di dalam file sesuai root Laravel Anda
+    
+    sudo cp reverb-smartdrip.service /etc/systemd/system/
+    sudo systemctl daemon-reload
+    sudo systemctl enable reverb-smartdrip
+    sudo systemctl start reverb-smartdrip
+    
+    # Cek status:
+    sudo systemctl status reverb-smartdrip
+    
+    # Lihat log:
+    sudo journalctl -u reverb-smartdrip -f
+
+OPSI C: Supervisor (alternatif untuk systemd):
+    [program:reverb-smartdrip]
+    command=php /home/user/domains/smartdrip-system.agrinex.io/public_html/artisan reverb:start --host=127.0.0.1 --port=8080 --hostname=smartdrip-system.agrinex.io
+    autostart=true
+    autorestart=true
+    user=www-data
+    redirect_stderr=true
+    stdout_logfile=/home/user/domains/smartdrip-system.agrinex.io/logs/reverb.log
+
+================================================================================
+LANGKAH 5: VERIFIKASI
+================================================================================
+
+5a. Cek Reverb berjalan:
+    ps aux | grep "reverb:start"
+    netstat -tuln | grep 8080
+
+5b. Test WebSocket dari browser (buka console):
+    https://smartdrip-system.agrinex.io/
+    
+    Console log harus menunjukkan:
+    ✓ WebSocket connection to 'wss://smartdrip-system.agrinex.io/app/...'
+    ✗ JANGAN ada: wss://localhost:8080
+
+5c. Test connection manual via wscat (opsional):
+    npm install -g wscat
+    wscat -c "wss://smartdrip-system.agrinex.io/app/tbsxrfwi1yg3to6isz1l?protocol=7"
+
+5d. Monitor log Reverb:
+    tail -f storage/logs/reverb.log
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+ISSUE: WebSocket stuck di "connecting", never open
+FIX:  - Cek Nginx proxy_pass mengarah ke 127.0.0.1:8080
+      - Cek firewall tidak block port 8080 (lokal)
+      - Cek SSL certificate valid (wss:// butuh HTTPS valid)
+      - Cek Reverb log: storage/logs/reverb.log
+
+ISSUE: Error "Origin not allowed"
+FIX:  - Edit config/reverb.php, 'allowed_origins' => ['*'] atau list domain
+      - php artisan config:cache
+
+ISSUE: Reverb process mati setelah logout SSH
+FIX:  - Gunakan systemd service (OPSI B di LANGKAH 4)
+      - Atau gunakan screen/tmux untuk manual testing
+
+ISSUE: npm run build tidak mengubah bundle
+FIX:  - Hapus public/build/, rm -rf node_modules/.vite
+      - npm run build ulang
+      - Hard refresh browser (Ctrl+Shift+R)
+
+================================================================================
+CHECKLIST FINAL
+================================================================================
+
+□ .env production di server berisi VITE_REVERB_HOST=smartdrip-system.agrinex.io
+□ php artisan config:cache dijalankan
+□ npm run build dijalankan (lokal) dan public/build/ ter-upload
+□ Nginx reverse proxy /app/ → 127.0.0.1:8080 sudah ditambahkan
+□ nginx -t && systemctl reload nginx berhasil
+□ Reverb server berjalan (ps aux | grep reverb)
+□ Browser console menunjukkan wss://smartdrip-system.agrinex.io/app/...
+□ WebSocket status: OPEN (hijau di Network tab)
+
+================================================================================
+KONTAK & REFERENSI
+================================================================================
+
+File config lokal (untuk referensi):
+  - /tmp/reverb-production-setup.sh
+  - /tmp/nginx-reverb.conf
+  - /tmp/reverb-smartdrip.service
+
+Dokumentasi Laravel Reverb:
+  https://laravel.com/docs/11.x/reverb
+
+Versi ini dibuat: 2026-07-13
+Status lokal: ✓ .env updated, ✓ Vite built, ✓ bundle verified
+
+================================================================================

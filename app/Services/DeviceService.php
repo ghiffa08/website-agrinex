@@ -97,4 +97,65 @@ class DeviceService
             ];
         });
     }
+
+    /**
+     * Get all devices with latest sensor data (for polling)
+     */
+    public function getAllDevicesWithLatestData(): array
+    {
+        return Cache::remember('dashboard_devices_repo', 60, function () {
+            $devices = \Illuminate\Support\Facades\DB::table('devices')
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get();
+
+            $result = [];
+            foreach ($devices as $device) {
+                $latestData = SensorData::where('device_id', $device->id)
+                    ->orderBy('recorded_at', 'desc')
+                    ->first();
+
+                $result[] = [
+                    'id' => $device->id,
+                    'name' => $device->name,
+                    'location' => $device->location ?? 'Unknown',
+                    'is_active' => (bool) $device->is_active,
+                    'latest_data' => $latestData ? [
+                        'temperature' => (float) $latestData->temperature,
+                        'soil_moisture' => (float) $latestData->soil_moisture,
+                        'humidity' => (float) ($latestData->humidity ?? 0),
+                        'recorded_at' => $latestData->recorded_at,
+                    ] : null,
+                ];
+            }
+
+            return $result;
+        });
+    }
+
+    /**
+     * Get devices status only (lightweight polling)
+     */
+    public function getDevicesStatusOnly(): array
+    {
+        $devices = \Illuminate\Support\Facades\DB::table('devices')
+            ->where('is_active', true)
+            ->select('id', 'name', 'is_active')
+            ->get();
+
+        $result = [];
+        foreach ($devices as $device) {
+            $hasRecentData = SensorData::where('device_id', $device->id)
+                ->where('recorded_at', '>=', Carbon::now()->subMinutes(10))
+                ->exists();
+
+            $result[] = [
+                'id' => $device->id,
+                'name' => $device->name,
+                'online' => $hasRecentData,
+            ];
+        }
+
+        return $result;
+    }
 }
