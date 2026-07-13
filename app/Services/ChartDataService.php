@@ -28,7 +28,7 @@ class ChartDataService
                 $sessions = $this->sessionRepo->getSessionsInRange($startTime);
             } elseif ($limit) {
                 $sessions = $this->sessionRepo->getSessionsWithLimit($limit);
-                $startTime = $sessions->first() ? Carbon::parse($sessions->first()->waktu_mulai) : Carbon::now();
+                $startTime = $sessions->first() ? Carbon::parse($sessions->first()->started_at) : Carbon::now();
             } else {
                 $startTime = Carbon::now()->subDays(7);
                 $sessions = $this->sessionRepo->getSessionsInRange($startTime);

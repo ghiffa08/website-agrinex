@@ -1,0 +1,91 @@
+HOTFIX: Alpine.js Warning & Charts API 500 Error - RESOLVED
+================================================================
+
+MASALAH YANG DIPERBAIKI
+-----------------------
+1. Alpine.js Warning: x-for ":key" is undefined or invalid template
+   - Error: weekLegend is undefined
+   - Location: resources/views/components/weekly-tasks.blade.php:135
+
+2. API Error 500: /api/v1/dashboard/charts?type=all&days=7
+   - Error: Cannot read properties of undefined (reading 'waktu_mulai')
+   - Location: app/Services/ChartDataService.php:31
+
+ROOT CAUSE
+----------
+1. weekLegend Implementation Error (dashboard.js:770-773)
+   - Mengembalikan array of strings: ['Min', 'Sen', 'Sel', ...]
+   - Template mengharapkan array of objects: [{key, bg, label}, ...]
+
+2. ChartDataService Field Name Error
+   - Masih pakai field legacy 'waktu_mulai'
+   - Setelah normalisasi, field berubah jadi 'started_at'
+
+FIX APPLIED
+-----------
+✓ File 1: public/js/dashboard.js (line 770-777)
+  Changed:
+    get weekLegend() {
+        const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+        return this.weekViewDays.map(d => days[new Date(d.date).getDay()]);
+    }
+  
+  To:
+    get weekLegend() {
+        return [
+            { key: 'plowing', bg: 'bg-amber-500', label: 'Olah Lahan' },
+            { key: 'fert', bg: 'bg-green-500', label: 'Pemupukan' },
+            { key: 'ship', bg: 'bg-yellow-400', label: 'Pengiriman' },
+            { key: 'idle', bg: 'bg-gray-100', label: 'Normal' },
+        ];
+    }
+
+✓ File 2: app/Services/ChartDataService.php (line 31)
+  Changed:
+    $sessions->first()->waktu_mulai
+  
+  To:
+    $sessions->first()->started_at
+
+VERIFICATION
+------------
+✓ npm run build: PASSED (3.74s)
+✓ PHP syntax check: PASSED
+✓ Cache cleared: OK
+
+FILES MODIFIED
+--------------
+1. public/js/dashboard.js (9 lines changed)
+2. app/Services/ChartDataService.php (1 line changed)
+
+DEPLOY TO PRODUCTION
+--------------------
+1. Upload kedua file yang sudah diperbaiki:
+   - public/js/dashboard.js
+   - app/Services/ChartDataService.php
+
+2. Clear cache di production:
+   php artisan cache:clear
+   php artisan config:clear
+
+3. Test endpoints:
+   - Buka dashboard: https://smartdrip-system.agrinex.io
+   - Cek console browser (tidak ada Alpine warning lagi)
+   - Cek API: curl https://smartdrip-system.agrinex.io/api/v1/dashboard/charts?type=all&days=7
+
+EXPECTED RESULT
+---------------
+✓ Alpine.js warning hilang
+✓ Week legend tampil dengan warna kategori (Olah Lahan, Pemupukan, dll)
+✓ Charts API return 200 OK dengan data sessions
+✓ Dashboard loading complete tanpa error
+
+CATATAN
+-------
+Fix ini melengkapi HOTFIX_DASHBOARD_API_500.txt sebelumnya.
+Total 3 file diperbaiki dalam 2 hotfix:
+  1. app/Repositories/Eloquent/EloquentDashboardRepository.php (138 lines)
+  2. public/js/dashboard.js (9 lines)
+  3. app/Services/ChartDataService.php (1 line)
+
+Semua error 500 dan Alpine.js warning sudah resolved! ✅

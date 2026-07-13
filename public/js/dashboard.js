@@ -768,8 +768,13 @@ function dashboard() {
         },
 
         get weekLegend() {
-            const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
-            return this.weekViewDays.map(d => days[new Date(d.date).getDay()]);
+            // Return legend items based on categoryStyles for the week view
+            return [
+                { key: 'plowing', bg: 'bg-amber-500', label: 'Olah Lahan' },
+                { key: 'fert', bg: 'bg-green-500', label: 'Pemupukan' },
+                { key: 'ship', bg: 'bg-yellow-400', label: 'Pengiriman' },
+                { key: 'idle', bg: 'bg-gray-100', label: 'Normal' },
+            ];
         },
     };
 }
