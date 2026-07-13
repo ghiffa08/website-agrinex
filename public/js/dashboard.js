@@ -725,6 +725,12 @@ function dashboard() {
         // --- Refresh ---
         fetchDevices() { this.loadDevices(); this.loadEnvStats() },
 
+        async refreshTasks() {
+            // Refresh plan, usage, and rebuild tasks
+            await Promise.allSettled([this.loadPlan(), this.loadUsage(), this.loadUsageDaily()]);
+            this.buildTasks();
+        },
+
         // --- Irrigation Refresh ---
         async refreshIrrigationData() {
             // Refresh usage, schedule, and tank data after irrigation event

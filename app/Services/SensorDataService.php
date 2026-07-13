@@ -70,21 +70,30 @@ class SensorDataService
                 $insertedCounts['getdata_logs'] = count($data['getdata_logs']);
             }
 
-            // 2. Insert sensor_weather_data
+            // 2. Insert weather_data
             if (!empty($data['sensor_weather_data'])) {
                 foreach ($data['sensor_weather_data'] as $weather) {
-                    $this->weatherRepo->createSensorWeatherRecord(array_merge($weather, [
-                        'sesi_id_getdata' => $sesiId
+                    $this->weatherRepo->createWeatherRecord(array_merge($weather, [
+                        'data_session_id' => $sesiId, // Map from legacy sesi_id_getdata
+                        // Map legacy fields to new fields
+                        'temp_c' => $weather['temp_dht'] ?? null,
+                        'humidity_pct' => $weather['humidity'] ?? null,
+                        'light_lux' => $weather['light'] ?? null,
+                        'voltage_v' => $weather['voltage'] ?? null,
+                        'current_ma' => $weather['arus'] ?? null,
+                        'power_mw' => $weather['power'] ?? null,
                     ]));
                 }
-                $insertedCounts['sensor_weather_data'] = count($data['sensor_weather_data']);
+                $insertedCounts['weather_data'] = count($data['sensor_weather_data']);
             }
 
-            // 3. Insert sensor_node_data
+            // 3. Insert sensor_data
             if (!empty($data['sensor_node_data'])) {
                 foreach ($data['sensor_node_data'] as $node) {
-                    $this->sensorRepo->createSensorNodeRecord(array_merge($node, [
-                        'sesi_id_getdata' => $sesiId
+                    $this->sensorRepo->createSensorRecord(array_merge($node, [
+                        'data_session_id' => $sesiId, // Map from legacy sesi_id_getdata
+                        'device_id' => $node['node_id'] ?? null,
+                        'soil_moisture' => $node['soil_pct'] ?? null,
                     ]));
 
                     // Auto-register master node if it doesn't exist
@@ -98,7 +107,7 @@ class SensorDataService
                         ]
                     );
                 }
-                $insertedCounts['sensor_node_data'] = count($data['sensor_node_data']);
+                $insertedCounts['sensor_data'] = count($data['sensor_node_data']);
             }
 
             // 4. Insert node_logs

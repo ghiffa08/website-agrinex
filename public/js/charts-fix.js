@@ -100,19 +100,29 @@ async function loadChartData() {
         if (!resp.ok) throw new Error(`API ${resp.status}`);
         const json = await resp.json();
         const d = json.data || json;
-        updateChart('light', d.light, (item) => [item.time, [parseFloat(item.radiation)||0, (parseFloat(item.radiation)||0)*0.9]]);
-        updateChart('water', d.water, (item) => [item.time, [parseFloat(item.level)||0]]);
-        updateChart('temp', d.temperature, (item) => [item.time, [parseFloat(item.temperature)||0]]);
-        updateChart('humidity', d.humidity, (item) => [item.time, [parseFloat(item.humidity)||0]]);
-        updateSoilChart(d.soil);
-    } catch (_) {
-        // silent fail - empty state
+        
+        updateChart('light', d.light, (item) => [item.time, [parseFloat(item.radiation)||0, (parseFloat(item.radiation)||0)*0.9]], 'lightChartBadge');
+        updateChart('water', d.water, (item) => [item.time, [parseFloat(item.level)||0]], 'waterChartBadge');
+        updateChart('temp', d.temperature, (item) => [item.time, [parseFloat(item.temperature)||0]], 'tempChartBadge');
+        updateChart('humidity', d.humidity, (item) => [item.time, [parseFloat(item.humidity)||0]], 'humidityChartBadge');
+        updateSoilChart(d.soil, 'soilChartBadge');
+    } catch (err) {
+        console.error("Error loading charts:", err);
+        ['lightChartBadge', 'waterChartBadge', 'tempChartBadge', 'humidityChartBadge', 'soilChartBadge'].forEach(id => {
+            const badge = document.getElementById(id);
+            if (badge) {
+                badge.textContent = 'Error';
+                badge.className = 'text-[10px] px-3 py-1 rounded-xl bg-red-100 text-red-600 font-semibold';
+            }
+        });
     }
 }
 
-function updateChart(type, data, mapper) {
+function updateChart(type, data, mapper, badgeId) {
     const chart = window.envCharts[type];
+    const badge = document.getElementById(badgeId);
     if (!chart) return;
+    
     const labels = [], ds = [];
     if (data && data.length) {
         data.forEach(item => {
@@ -120,23 +130,49 @@ function updateChart(type, data, mapper) {
             labels.push(label);
             values.forEach((v, i) => { if (!ds[i]) ds[i] = []; ds[i].push(v); });
         });
+        
+        if (badge) {
+            badge.textContent = 'Online';
+            badge.className = 'text-[10px] px-3 py-1 rounded-xl bg-emerald-100 text-emerald-600 font-semibold';
+        }
+    } else {
+        if (badge) {
+            badge.textContent = 'No Data';
+            badge.className = 'text-[10px] px-3 py-1 rounded-xl bg-slate-100 text-slate-500 font-semibold';
+        }
     }
+    
     chart.data.labels = labels;
     chart.data.datasets.forEach((dataset, i) => { dataset.data = ds[i] || []; });
     chart.update();
 }
 
-function updateSoilChart(data) {
+function updateSoilChart(data, badgeId) {
     const chart = window.envCharts.soil;
+    const badge = document.getElementById(badgeId);
     if (!chart) return;
+    
     const labels = [], ds = [[],[],[],[],[],[],[],[]];
     if (data && data.length) {
         data.forEach(item => {
             labels.push(item.time);
             const avg = parseFloat(item.average) || 0;
-            for (let i = 0; i < 8; i++) ds[i].push(avg);
+            for (let i = 0; i < 8; i++) {
+                ds[i].push(avg); 
+            }
         });
+        
+        if (badge) {
+            badge.textContent = 'Online';
+            badge.className = 'text-[10px] px-3 py-1 rounded-xl bg-emerald-100 text-emerald-600 font-semibold';
+        }
+    } else {
+        if (badge) {
+            badge.textContent = 'No Data';
+            badge.className = 'text-[10px] px-3 py-1 rounded-xl bg-slate-100 text-slate-500 font-semibold';
+        }
     }
+    
     chart.data.labels = labels;
     chart.data.datasets.forEach((d, i) => { d.data = ds[i] || []; });
     chart.update();
