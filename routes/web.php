@@ -38,16 +38,6 @@ Route::get('/hostinger-optimize-artisan-route-99x', function () {
     return 'Hostinger optimization complete: config, routes, and views cached successfully.';
 });
 
-Route::get('/run-normalization-99x', function () {
-    try {
-        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-        $output = \Illuminate\Support\Facades\Artisan::output();
-        return "Database normalization (migration) completed successfully.<br><pre>" . htmlspecialchars($output) . "</pre>";
-    } catch (\Exception $e) {
-        return "Migration failed: " . htmlspecialchars($e->getMessage());
-    }
-});
-
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post');
