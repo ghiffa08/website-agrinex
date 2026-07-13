@@ -25,7 +25,7 @@ class EloquentDashboardRepository implements DashboardRepositoryInterface
     protected int $perNodeCacheTtl    = 30;   // 30s per-node cache (write-through)
 
     /**
-     * Get a single node with latest sensor data.
+     * Get a single device with latest sensor data.
      * Uses per-node write-through cache: the cache is warmed on telemetry
      * ingestion via invalidateNodeCache(), so dashboard reads are near-free.
      */
@@ -47,43 +47,43 @@ class EloquentDashboardRepository implements DashboardRepositoryInterface
     }
 
     /**
-     * Build the device data array for a single node (uncached).
+     * Build the device data array for a single device (uncached).
      */
-    private function buildNodeData(int $nodeId): ?array
+    private function buildNodeData(int $deviceId): ?array
     {
-        $node = DB::table('node')->where('node_id', $nodeId)->first();
-        if (!$node) return null;
+        $device = DB::table('devices')->where('id', $deviceId)->first();
+        if (!$device) return null;
 
         $sensor = DB::table('sensor_data')
-            ->where('device_id', $nodeId)
+            ->where('device_id', $deviceId)
             ->orderBy('recorded_at', 'desc')
             ->first();
 
-        $log = DB::table('node_logs')
-            ->where('node_id', $nodeId)
-            ->orderBy('waktu', 'desc')
+        $log = DB::table('device_logs')
+            ->where('device_id', $deviceId)
+            ->orderBy('logged_at', 'desc')
             ->first();
 
-        $lahanName = $node->lahan_pantau_id
-            ? DB::table('lahan_pantaus')->where('id', $node->lahan_pantau_id)->value('nama_lahan')
+        $lahanName = $device->lahan_pantau_id
+            ? DB::table('lahan_pantaus')->where('id', $device->lahan_pantau_id)->value('nama_lahan')
             : null;
 
-        $lastSeen = $sensor->recorded_at ?? $log->waktu ?? null;
+        $lastSeen = $sensor->recorded_at ?? $log->logged_at ?? null;
         $status   = $lastSeen ? $this->getConnectionStatus($lastSeen) : 'offline';
 
         return [
-            'id'                    => $node->node_id,
-            'device_id'             => $node->node_id,
-            'name'                  => "Node {$node->node_id}",
-            'device_name'           => "Node {$node->node_id}",
-            'plot_number'           => $node->node_id,
-            'location'              => $node->lokasi ?? "Sensor Node {$node->node_id}",
-            'treatment_description' => $node->keterangan ?? 'Monitoring Optimal',
-            'treatment_type'        => $node->group ?? 'standard',
-            'treatment_code'        => $node->kode_perlakuan ?? "T{$node->node_id}",
-            'group'                 => $node->group,
-            'kode_perlakuan'       => $node->kode_perlakuan,
-            'lahan_pantau_id'      => $node->lahan_pantau_id ?? null,
+            'id'                    => $device->id,
+            'device_id'             => $device->id,
+            'name'                  => $device->name ?? "Device {$device->id}",
+            'device_name'           => $device->name ?? "Device {$device->id}",
+            'plot_number'           => $device->id,
+            'location'              => $device->location ?? "Sensor Device {$device->id}",
+            'treatment_description' => $device->description ?? 'Monitoring Optimal',
+            'treatment_type'        => 'standard',
+            'treatment_code'        => "T{$device->id}",
+            'group'                 => null,
+            'kode_perlakuan'       => "T{$device->id}",
+            'lahan_pantau_id'      => $device->lahan_pantau_id ?? null,
             'lahan_pantau_name'    => $lahanName,
 
             'soil_moisture_pct'    => $sensor ? (float) $sensor->soil_moisture : null,
@@ -96,20 +96,20 @@ class EloquentDashboardRepository implements DashboardRepositoryInterface
             'light_lux'            => null,
             'water_height_cm'      => null,
 
-            'signal_strength_rssi' => $log ? (float) $log->rssi_dbm : null,
-            'signal_strength_pct'  => $log && $log->rssi_dbm
-                ? max(0, min(100, round((($log->rssi_dbm + 120) / 70) * 100)))
+            'signal_strength_rssi' => $log ? (float) ($log->rssi ?? null) : null,
+            'signal_strength_pct'  => $log && isset($log->rssi)
+                ? max(0, min(100, round((($log->rssi + 120) / 70) * 100)))
                 : null,
 
             'connection_state'   => $status,
             'connection_status'  => $status,
             'valve_state'        => 'closed',
-            'is_active'          => true,
+            'is_active'          => (bool) ($device->is_active ?? true),
             'status'             => $sensor ? 'normal' : 'no_data',
             'water_usage_today_l' => 0,
             'last_seen'          => $lastSeen,
             'recorded_at'        => $lastSeen,
-            'waktu_update'       => $node->waktu_update ?? null,
+            'waktu_update'       => $device->updated_at ?? null,
             'last_updated'       => $lastSeen
                 ? Carbon::parse($lastSeen)->diffForHumans()
                 : null,
@@ -117,80 +117,80 @@ class EloquentDashboardRepository implements DashboardRepositoryInterface
     }
 
     /**
-     * Get all nodes with latest sensor data.
+     * Get all devices with latest sensor data.
      * Fixed: was doing N+1 queries (1 per node). Now uses 2 bulk queries total.
      */
     public function getDevices(): array
     {
         return Cache::remember('dashboard_devices_repo', $this->realtimeCacheTtl, function () {
-            $nodes = DB::table('node')->get();
+            $devices = DB::table('devices')->get();
 
-            if ($nodes->isEmpty()) {
+            if ($devices->isEmpty()) {
                 return [];
             }
 
-            $nodeIds = $nodes->pluck('node_id')->all();
+            $deviceIds = $devices->pluck('id')->all();
 
-            // Bulk fetch latest sensor data per node (one query)
+            // Bulk fetch latest sensor data per device (one query)
             $latestSensor = DB::table('sensor_data as s')
                 ->joinSub(
                     DB::table('sensor_data')
                         ->selectRaw('device_id, MAX(recorded_at) as max_at')
-                        ->whereIn('device_id', $nodeIds)
+                        ->whereIn('device_id', $deviceIds)
                         ->groupBy('device_id'),
                     'latest',
                     fn ($join) => $join
                         ->on('s.device_id', '=', 'latest.device_id')
                         ->on('s.recorded_at', '=', 'latest.max_at')
                 )
-                ->whereIn('s.device_id', $nodeIds)
+                ->whereIn('s.device_id', $deviceIds)
                 ->get()
                 ->keyBy('device_id');
 
-            // Bulk fetch latest node logs per node (one query)
-            $latestLog = DB::table('node_logs as l')
+            // Bulk fetch latest device logs per device (one query)
+            $latestLog = DB::table('device_logs as l')
                 ->joinSub(
-                    DB::table('node_logs')
-                        ->selectRaw('node_id, MAX(waktu) as max_waktu')
-                        ->whereIn('node_id', $nodeIds)
-                        ->groupBy('node_id'),
+                    DB::table('device_logs')
+                        ->selectRaw('device_id, MAX(logged_at) as max_logged_at')
+                        ->whereIn('device_id', $deviceIds)
+                        ->groupBy('device_id'),
                     'latest',
                     fn ($join) => $join
-                        ->on('l.node_id', '=', 'latest.node_id')
-                        ->on('l.waktu', '=', 'latest.max_waktu')
+                        ->on('l.device_id', '=', 'latest.device_id')
+                        ->on('l.logged_at', '=', 'latest.max_logged_at')
                 )
-                ->whereIn('l.node_id', $nodeIds)
+                ->whereIn('l.device_id', $deviceIds)
                 ->get()
-                ->keyBy('node_id');
+                ->keyBy('device_id');
 
             // Bulk fetch lahan pantau names (one query)
-            $lahanIds = $nodes->pluck('lahan_pantau_id')->filter()->unique()->all();
+            $lahanIds = $devices->pluck('lahan_pantau_id')->filter()->unique()->all();
             $lahanNames = $lahanIds
                 ? DB::table('lahan_pantaus')
                     ->whereIn('id', $lahanIds)
                     ->pluck('nama_lahan', 'id')
                 : collect();
 
-            return $nodes->map(function ($node) use ($latestSensor, $latestLog, $lahanNames) {
-                $sensor  = $latestSensor->get($node->node_id);
-                $log     = $latestLog->get($node->node_id);
-                $lastSeen = $sensor->recorded_at ?? $log->waktu ?? null;
+            return $devices->map(function ($device) use ($latestSensor, $latestLog, $lahanNames) {
+                $sensor  = $latestSensor->get($device->id);
+                $log     = $latestLog->get($device->id);
+                $lastSeen = $sensor->recorded_at ?? $log->logged_at ?? null;
                 $status   = $lastSeen ? $this->getConnectionStatus($lastSeen) : 'offline';
 
                 return [
-                    'id'                    => $node->node_id,
-                    'device_id'             => $node->node_id,
-                    'name'                  => "Node {$node->node_id}",
-                    'device_name'           => "Node {$node->node_id}",
-                    'plot_number'           => $node->node_id,
-                    'location'              => $node->lokasi ?? "Sensor Node {$node->node_id}",
-                    'treatment_description' => $node->keterangan ?? 'Monitoring Optimal',
-                    'treatment_type'        => $node->group ?? 'standard',
-                    'treatment_code'        => $node->kode_perlakuan ?? "T{$node->node_id}",
-                    'group'                 => $node->group,
-                    'kode_perlakuan'       => $node->kode_perlakuan,
-                    'lahan_pantau_id'      => $node->lahan_pantau_id ?? null,
-                    'lahan_pantau_name'    => $lahanNames->get($node->lahan_pantau_id ?? null),
+                    'id'                    => $device->id,
+                    'device_id'             => $device->id,
+                    'name'                  => $device->name ?? "Device {$device->id}",
+                    'device_name'           => $device->name ?? "Device {$device->id}",
+                    'plot_number'           => $device->id,
+                    'location'              => $device->location ?? "Sensor Device {$device->id}",
+                    'treatment_description' => $device->description ?? 'Monitoring Optimal',
+                    'treatment_type'        => 'standard',
+                    'treatment_code'        => "T{$device->id}",
+                    'group'                 => null,
+                    'kode_perlakuan'       => "T{$device->id}",
+                    'lahan_pantau_id'      => $device->lahan_pantau_id ?? null,
+                    'lahan_pantau_name'    => $lahanNames->get($device->lahan_pantau_id ?? null),
 
                     'soil_moisture_pct'    => $sensor ? (float) $sensor->soil_moisture : null,
                     'temperature_c'        => $sensor ? (float) $sensor->temperature   : null,
@@ -203,20 +203,20 @@ class EloquentDashboardRepository implements DashboardRepositoryInterface
                     'light_lux'            => null,
                     'water_height_cm'      => null,
 
-                    'signal_strength_rssi' => $log ? (float) $log->rssi_dbm : null,
-                    'signal_strength_pct'  => $log && $log->rssi_dbm
-                        ? max(0, min(100, round((($log->rssi_dbm + 120) / 70) * 100)))
+                    'signal_strength_rssi' => $log ? (float) ($log->rssi ?? null) : null,
+                    'signal_strength_pct'  => $log && isset($log->rssi)
+                        ? max(0, min(100, round((($log->rssi + 120) / 70) * 100)))
                         : null,
 
                     'connection_state'   => $status,
                     'connection_status'  => $status,
                     'valve_state'        => 'closed',
-                    'is_active'          => true,
+                    'is_active'          => (bool) ($device->is_active ?? true),
                     'status'             => $sensor ? 'normal' : 'no_data',
                     'water_usage_today_l' => 0,
                     'last_seen'          => $lastSeen,
                     'recorded_at'        => $lastSeen,
-                    'waktu_update'       => $node->waktu_update ?? null,
+                    'waktu_update'       => $device->updated_at ?? null,
                     'last_updated'       => $lastSeen
                         ? Carbon::parse($lastSeen)->diffForHumans()
                         : null,

@@ -1,0 +1,66 @@
+HOTFIX: Error 500 /api/v1/dashboard/devices Setelah Normalisasi Database
+===========================================================================
+
+MASALAH
+-------
+Setelah normalisasi database (drop tabel `node`, `node_logs`), API dashboard
+error 500 karena EloquentDashboardRepository masih query ke tabel yang sudah dihapus.
+
+ROOT CAUSE
+----------
+File: app/Repositories/Eloquent/EloquentDashboardRepository.php
+- Line 126: DB::table('node') → tabel sudah tidak ada
+- Line 151-164: DB::table('node_logs') → tabel sudah tidak ada
+- Line 54-116: buildNodeData() masih pakai variable $node
+
+YANG SUDAH DIPERBAIKI
+----------------------
+✓ EloquentDashboardRepository.php - ganti semua referensi:
+  - 'node' → 'devices'
+  - 'node_logs' → 'device_logs'
+  - 'node_id' → 'id' (untuk devices table)
+  - 'waktu' → 'logged_at' (untuk device_logs)
+  - Variable $node → $device
+  - Field mapping disesuaikan dengan struktur tabel devices
+
+CARA DEPLOY KE PRODUCTION
+--------------------------
+1. Upload file yang sudah diperbaiki:
+   scp app/Repositories/Eloquent/EloquentDashboardRepository.php user@server:/path/to/project/app/Repositories/Eloquent/
+
+2. Clear cache di production:
+   php artisan config:clear
+   php artisan cache:clear
+   php artisan route:clear
+   php artisan view:clear
+
+3. Test endpoint:
+   curl https://smartdrip-system.agrinex.io/api/v1/dashboard/devices
+   curl https://smartdrip-system.agrinex.io/api/v1/dashboard/charts?type=all&days=7
+
+VERIFIKASI LOCAL
+----------------
+✓ PHP syntax check: PASSED
+✓ Config cache cleared
+✓ Application cache cleared
+✓ No more references to 'node' or 'node_logs' in codebase
+
+FILE YANG DIUPDATE
+------------------
+- app/Repositories/Eloquent/EloquentDashboardRepository.php (440 lines)
+
+CATATAN PENTING
+---------------
+Jika masih error setelah deploy, cek:
+1. Apakah tabel 'devices' ada di production? 
+   SELECT COUNT(*) FROM devices;
+   
+2. Apakah tabel 'device_logs' ada?
+   SELECT COUNT(*) FROM device_logs;
+   
+3. Apakah struktur kolom sesuai?
+   DESCRIBE devices;
+   DESCRIBE device_logs;
+
+Jika tabel masih belum ada, berarti migration belum dijalankan.
+Jalankan: php artisan migrate
