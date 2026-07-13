@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\DeviceService;
 use App\Services\SensorDataService;
 use App\Services\CacheService;
+use App\Services\EnvironmentSummaryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -14,15 +15,18 @@ class DashboardPollingController extends Controller
     protected DeviceService $deviceService;
     protected SensorDataService $sensorDataService;
     protected CacheService $cacheService;
+    protected EnvironmentSummaryService $environmentService;
 
     public function __construct(
         DeviceService $deviceService,
         SensorDataService $sensorDataService,
-        CacheService $cacheService
+        CacheService $cacheService,
+        EnvironmentSummaryService $environmentService
     ) {
         $this->deviceService = $deviceService;
         $this->sensorDataService = $sensorDataService;
         $this->cacheService = $cacheService;
+        $this->environmentService = $environmentService;
     }
 
     /**
@@ -46,7 +50,7 @@ class DashboardPollingController extends Controller
 
             // Ada perubahan, kirim data lengkap
             $devicesData = $this->deviceService->getAllDevicesWithLatestData();
-            $weatherData = $this->sensorDataService->getLatestWeatherData();
+            $environmentSummary = $this->environmentService->getEnvironmentSummary();
 
             return response()->json([
                 'success' => true,
@@ -54,7 +58,7 @@ class DashboardPollingController extends Controller
                 'last_update' => $serverLastUpdate ?: now()->timestamp,
                 'data' => [
                     'devices' => $devicesData,
-                    'weather' => $weatherData,
+                    'environment' => $environmentSummary,
                 ],
             ]);
 
@@ -116,5 +120,45 @@ class DashboardPollingController extends Controller
                 'message' => 'Status polling failed: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Get environment summary (aggregated sensor + BMKG weather)
+     * GET /api/v1/dashboard/environment
+     */
+    public function environment(Request $request)
+    {
+        try {
+            $summary = $this->environmentService->getEnvironmentSummary();
+
+            return response()->json([
+                'success' => true,
+                'data' => $summary,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Environment summary error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch environment summary: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Status endpoint (deprecated - use poll instead)
+     * GET /api/v1/dashboard/status
+     */
+    public function status()
+    {
+        return response()->json([
+            'success' => true,
+            'message' => 'This endpoint is deprecated. Use /api/v1/dashboard/poll instead.',
+            'timestamp' => now()->timestamp,
+        ]);
     }
 }
