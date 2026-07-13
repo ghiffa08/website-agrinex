@@ -47,7 +47,7 @@ return [
 
     'bmkg' => [
         'api_url' => env('BMKG_API_URL', 'https://api.bmkg.go.id/publik/prakiraan-cuaca'),
-        'location_code' => env('BMKG_LOCATION_CODE', '501297'), // Default: Jakarta (adjust to your location)
+        'location_code' => env('BMKG_LOCATION_CODE', '501227'), // Default: Kuningan, Jawa Barat (adjust to your location)
         'timeout' => env('BMKG_API_TIMEOUT', 10), // seconds
         
         // Location codes reference (Indonesia):
