@@ -54,9 +54,9 @@ class EloquentDashboardRepository implements DashboardRepositoryInterface
         $node = DB::table('node')->where('node_id', $nodeId)->first();
         if (!$node) return null;
 
-        $sensor = DB::table('sensor_node_data')
-            ->where('node_id', $nodeId)
-            ->orderBy('received_at', 'desc')
+        $sensor = DB::table('sensor_data')
+            ->where('device_id', $nodeId)
+            ->orderBy('recorded_at', 'desc')
             ->first();
 
         $log = DB::table('node_logs')
@@ -68,7 +68,7 @@ class EloquentDashboardRepository implements DashboardRepositoryInterface
             ? DB::table('lahan_pantaus')->where('id', $node->lahan_pantau_id)->value('nama_lahan')
             : null;
 
-        $lastSeen = $sensor->received_at ?? $log->waktu ?? null;
+        $lastSeen = $sensor->recorded_at ?? $log->waktu ?? null;
         $status   = $lastSeen ? $this->getConnectionStatus($lastSeen) : 'offline';
 
         return [
@@ -82,13 +82,13 @@ class EloquentDashboardRepository implements DashboardRepositoryInterface
             'treatment_type'        => $node->group ?? 'standard',
             'treatment_code'        => $node->kode_perlakuan ?? "T{$node->node_id}",
             'group'                 => $node->group,
-            'kode_perlakuan'        => $node->kode_perlakuan,
-            'lahan_pantau_id'       => $node->lahan_pantau_id ?? null,
-            'lahan_pantau_name'     => $lahanName,
+            'kode_perlakuan'       => $node->kode_perlakuan,
+            'lahan_pantau_id'      => $node->lahan_pantau_id ?? null,
+            'lahan_pantau_name'    => $lahanName,
 
-            'soil_moisture_pct'    => $sensor ? (float) $sensor->soil_pct  : null,
-            'temperature_c'        => $sensor ? (float) $sensor->temp_c    : null,
-            'battery_voltage_v'    => $sensor ? (float) $sensor->voltage_v : null,
+            'soil_moisture_pct'    => $sensor ? (float) $sensor->soil_moisture : null,
+            'temperature_c'        => $sensor ? (float) $sensor->temperature   : null,
+            'battery_voltage_v'    => $sensor ? (float) $sensor->voltage_v   : null,
             'battery_percentage'   => $sensor ? $this->calculateBatteryPercentage($sensor->voltage_v) : null,
 
             'air_temp_c'           => null,
@@ -132,20 +132,20 @@ class EloquentDashboardRepository implements DashboardRepositoryInterface
             $nodeIds = $nodes->pluck('node_id')->all();
 
             // Bulk fetch latest sensor data per node (one query)
-            $latestSensor = DB::table('sensor_node_data as s')
+            $latestSensor = DB::table('sensor_data as s')
                 ->joinSub(
-                    DB::table('sensor_node_data')
-                        ->selectRaw('node_id, MAX(received_at) as max_at')
-                        ->whereIn('node_id', $nodeIds)
-                        ->groupBy('node_id'),
+                    DB::table('sensor_data')
+                        ->selectRaw('device_id, MAX(recorded_at) as max_at')
+                        ->whereIn('device_id', $nodeIds)
+                        ->groupBy('device_id'),
                     'latest',
                     fn ($join) => $join
-                        ->on('s.node_id', '=', 'latest.node_id')
-                        ->on('s.received_at', '=', 'latest.max_at')
+                        ->on('s.device_id', '=', 'latest.device_id')
+                        ->on('s.recorded_at', '=', 'latest.max_at')
                 )
-                ->whereIn('s.node_id', $nodeIds)
+                ->whereIn('s.device_id', $nodeIds)
                 ->get()
-                ->keyBy('node_id');
+                ->keyBy('device_id');
 
             // Bulk fetch latest node logs per node (one query)
             $latestLog = DB::table('node_logs as l')
@@ -174,7 +174,7 @@ class EloquentDashboardRepository implements DashboardRepositoryInterface
             return $nodes->map(function ($node) use ($latestSensor, $latestLog, $lahanNames) {
                 $sensor  = $latestSensor->get($node->node_id);
                 $log     = $latestLog->get($node->node_id);
-                $lastSeen = $sensor->received_at ?? $log->waktu ?? null;
+                $lastSeen = $sensor->recorded_at ?? $log->waktu ?? null;
                 $status   = $lastSeen ? $this->getConnectionStatus($lastSeen) : 'offline';
 
                 return [
@@ -188,13 +188,13 @@ class EloquentDashboardRepository implements DashboardRepositoryInterface
                     'treatment_type'        => $node->group ?? 'standard',
                     'treatment_code'        => $node->kode_perlakuan ?? "T{$node->node_id}",
                     'group'                 => $node->group,
-                    'kode_perlakuan'        => $node->kode_perlakuan,
-                    'lahan_pantau_id'       => $node->lahan_pantau_id ?? null,
-                    'lahan_pantau_name'     => $lahanNames->get($node->lahan_pantau_id ?? null),
+                    'kode_perlakuan'       => $node->kode_perlakuan,
+                    'lahan_pantau_id'      => $node->lahan_pantau_id ?? null,
+                    'lahan_pantau_name'    => $lahanNames->get($node->lahan_pantau_id ?? null),
 
-                    'soil_moisture_pct'    => $sensor ? (float) $sensor->soil_pct  : null,
-                    'temperature_c'        => $sensor ? (float) $sensor->temp_c    : null,
-                    'battery_voltage_v'    => $sensor ? (float) $sensor->voltage_v : null,
+                    'soil_moisture_pct'    => $sensor ? (float) $sensor->soil_moisture : null,
+                    'temperature_c'        => $sensor ? (float) $sensor->temperature   : null,
+                    'battery_voltage_v'    => $sensor ? (float) $sensor->voltage_v   : null,
                     'battery_percentage'   => $sensor ? $this->calculateBatteryPercentage($sensor->voltage_v) : null,
 
                     // Unused fields set to null - not from this data source

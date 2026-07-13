@@ -9,8 +9,6 @@ class SensorData extends Model
 {
     use HasFactory;
 
-    protected $guarded = ['id', 'created_at', 'updated_at'];
-
     public $timestamps = false;
 
     protected $fillable = [
@@ -28,6 +26,7 @@ class SensorData extends Model
         'ai_valve_decision',
         'adaptive_sleep_duration',
         'rssi',
+        'recorded_at',
     ];
 
     public function session()

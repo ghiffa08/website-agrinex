@@ -249,7 +249,8 @@
                         const resp = await fetch(`/api/devices/${this.deviceId}/chart-data`);
                         if (resp.ok) {
                             const data = await resp.json();
-                            this.renderChart(data.labels || [], data.soil_moisture || [], data.temperature || []);
+                            const ds = data.datasets || {};
+                            this.renderChart(data.labels || [], ds.soil_moisture || [], ds.temperature || []);
                         }
                     } catch (e) { console.error(e); }
                 },

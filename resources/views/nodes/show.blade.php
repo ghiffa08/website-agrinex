@@ -20,8 +20,8 @@
                     // Fixed: Check if sensorNodeData exists and is not empty before accessing
                     $isOnline =
                         $latestSensorData &&
-                        $latestSensorData->received_at &&
-                        $latestSensorData->received_at->diffInHours(now()) < 1;
+                        $latestSensorData->recorded_at &&
+                        $latestSensorData->recorded_at->diffInHours(now()) < 1;
                 @endphp
                 <span class="node-badge {{ $isOnline ? 'online' : 'offline' }} ms-2">
                     <span class="status-dot {{ $isOnline ? 'online' : 'offline' }}"></span>
@@ -51,9 +51,9 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <p class="text-muted mb-1">Temperature</p>
-                                    <h3 class="mb-0">{{ number_format($latest->temp_ds18 ?? 0, 1) }}°C</h3>
+                                    <h3 class="mb-0">{{ number_format($latest->temperature ?? 0, 1) }}°C</h3>
                                     <small
-                                        class="text-muted">{{ $latest->received_at ? $latest->received_at->diffForHumans() : 'N/A' }}</small>
+                                        class="text-muted">{{ $latest->recorded_at ? $latest->recorded_at->diffForHumans() : 'N/A' }}</small>
                                 </div>
                                 <div class="stat-icon bg-danger">
                                     <i class="bi bi-thermometer-half"></i>
@@ -69,13 +69,13 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <p class="text-muted mb-1">Soil Moisture</p>
-                                    <h3 class="mb-0 {{ ($latest->moist ?? 0) < 30 ? 'text-danger' : 'text-success' }}">
-                                        {{ number_format($latest->moist ?? 0, 1) }}%
+                                    <h3 class="mb-0 {{ ($latest->soil_moisture ?? 0) < 30 ? 'text-danger' : 'text-success' }}">
+                                        {{ number_format($latest->soil_moisture ?? 0, 1) }}%
                                     </h3>
                                     <small
-                                        class="text-muted">{{ $latest->received_at ? $latest->received_at->diffForHumans() : 'N/A' }}</small>
+                                        class="text-muted">{{ $latest->recorded_at ? $latest->recorded_at->diffForHumans() : 'N/A' }}</small>
                                 </div>
-                                <div class="stat-icon {{ ($latest->moist ?? 0) < 30 ? 'bg-danger' : 'bg-success' }}">
+                                <div class="stat-icon {{ ($latest->soil_moisture ?? 0) < 30 ? 'bg-danger' : 'bg-success' }}">
                                     <i class="bi bi-moisture"></i>
                                 </div>
                             </div>
@@ -89,13 +89,13 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <p class="text-muted mb-1">Voltage</p>
-                                    <h3 class="mb-0 {{ ($latest->volt ?? 0) < 3.0 ? 'text-warning' : 'text-success' }}">
-                                        {{ number_format($latest->volt ?? 0, 2) }}V
+                                    <h3 class="mb-0 {{ ($latest->voltage_v ?? 0) < 3.0 ? 'text-warning' : 'text-success' }}">
+                                        {{ number_format($latest->voltage_v ?? 0, 2) }}V
                                     </h3>
                                     <small
-                                        class="text-muted">{{ $latest->received_at ? $latest->received_at->diffForHumans() : 'N/A' }}</small>
+                                        class="text-muted">{{ $latest->recorded_at ? $latest->recorded_at->diffForHumans() : 'N/A' }}</small>
                                 </div>
-                                <div class="stat-icon {{ ($latest->volt ?? 0) < 3.0 ? 'bg-warning' : 'bg-success' }}">
+                                <div class="stat-icon {{ ($latest->voltage_v ?? 0) < 3.0 ? 'bg-warning' : 'bg-success' }}">
                                     <i class="bi bi-battery-charging"></i>
                                 </div>
                             </div>
@@ -109,9 +109,9 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <p class="text-muted mb-1">Current</p>
-                                    <h3 class="mb-0">{{ number_format($latest->current ?? 0, 0) }} mA</h3>
+                                    <h3 class="mb-0">{{ number_format($latest->current_ma ?? 0, 0) }} mA</h3>
                                     <small
-                                        class="text-muted">{{ $latest->received_at ? $latest->received_at->diffForHumans() : 'N/A' }}</small>
+                                        class="text-muted">{{ $latest->recorded_at ? $latest->recorded_at->diffForHumans() : 'N/A' }}</small>
                                 </div>
                                 <div class="stat-icon bg-info">
                                     <i class="bi bi-lightning-charge"></i>
@@ -166,17 +166,17 @@
                                 <tbody>
                                     @forelse($sensorData->take(20) as $data)
                                         <tr>
-                                            <td>{{ $data->received_at ? $data->received_at->format('d/m/Y H:i') : 'N/A' }}
+                                            <td>{{ $data->recorded_at ? $data->recorded_at->format('d/m/Y H:i') : 'N/A' }}
                                             </td>
-                                            <td>{{ number_format($data->temp_ds18 ?? 0, 1) }}°C</td>
+                                            <td>{{ number_format($data->temperature ?? 0, 1) }}°C</td>
                                             <td>
                                                 <span
-                                                    class="badge {{ ($data->moist ?? 0) < 30 ? 'bg-danger' : 'bg-success' }}">
-                                                    {{ number_format($data->moist ?? 0, 1) }}%
+                                                    class="badge {{ ($data->soil_moisture ?? 0) < 30 ? 'bg-danger' : 'bg-success' }}">
+                                                    {{ number_format($data->soil_moisture ?? 0, 1) }}%
                                                 </span>
                                             </td>
-                                            <td>{{ number_format($data->volt ?? 0, 2) }}V</td>
-                                            <td>{{ number_format($data->current ?? 0, 0) }} mA</td>
+                                            <td>{{ number_format($data->voltage_v ?? 0, 2) }}V</td>
+                                            <td>{{ number_format($data->current_ma ?? 0, 0) }} mA</td>
                                         </tr>
                                     @empty
                                         <tr>
@@ -262,7 +262,7 @@
                 }
 
                 const labels = sensorData.map(d => {
-                    const date = new Date(d.received_at);
+                    const date = new Date(d.recorded_at);
                     return date.toLocaleTimeString('en-US', {
                         hour: '2-digit',
                         minute: '2-digit'
@@ -275,14 +275,14 @@
                         labels: labels,
                         datasets: [{
                                 label: 'Temperature (°C)',
-                                data: sensorData.map(d => d.temp_ds18 || 0),
+                                data: sensorData.map(d => d.temperature || 0),
                                 borderColor: 'rgb(239, 68, 68)',
                                 backgroundColor: 'rgba(239, 68, 68, 0.1)',
                                 yAxisID: 'y',
-                            },
-                            {
+                                },
+                                {
                                 label: 'Soil Moisture (%)',
-                                data: sensorData.map(d => d.moist || 0),
+                                data: sensorData.map(d => d.soil_moisture || 0),
                                 borderColor: 'rgb(34, 197, 94)',
                                 backgroundColor: 'rgba(34, 197, 94, 0.1)',
                                 yAxisID: 'y1',

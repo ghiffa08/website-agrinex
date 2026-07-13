@@ -68,6 +68,17 @@ class TelemetryApiController extends Controller
                 ]
             );
 
+            // ── 2a. Auto-register node (for DashboardRepository compatibility) ──
+            $this->deviceRepo->firstOrCreateNode(
+                ['node_id' => $nodeId],
+                [
+                    'group'          => 'A',
+                    'kode_perlakuan' => 'P' . $nodeId,
+                    'lokasi'         => 'Otomatis dari API',
+                    'keterangan'     => "Node {$nodeId} didaftarkan otomatis oleh ESP32",
+                ]
+            );
+
             // ── 2b. Auto-register session if not yet known ──────────────────
             $session = $this->sessionRepo->findOrCreateSession($sessionId, [
                 'started_at'    => now(),
@@ -91,6 +102,7 @@ class TelemetryApiController extends Controller
                 'rssi'                    => $validated['rssi'] ?? null,
                 'ai_valve_decision'       => $validated['ai_valve_decision'] ?? null,
                 'adaptive_sleep_duration' => $validated['adaptive_sleep_duration'] ?? null,
+                // ESP32 sends millis() (uptime), not Unix epoch — always use server time
                 'recorded_at'             => now(),
             ]);
 

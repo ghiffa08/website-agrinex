@@ -118,8 +118,8 @@
                     @php
                         $latestData = $node->latestSensorData;
                         $isOnline = $latestData && 
-                                    $latestData->received_at && 
-                                    $latestData->received_at->diffInHours(now()) < 1;
+                                    $latestData->recorded_at && 
+                                    $latestData->recorded_at->diffInHours(now()) < 1;
                     @endphp
                     
                     <div class="mb-3">
@@ -135,19 +135,19 @@
                     @if($latestData)
                         <div class="mb-3">
                             <label class="text-muted small">Last Communication</label>
-                            <div>{{ $latestData->received_at->diffForHumans() }}</div>
+                            <div>{{ $latestData->recorded_at->diffForHumans() }}</div>
                         </div>
 
                         <div class="mb-3">
                             <label class="text-muted small">Latest Temperature</label>
-                            <div><strong>{{ number_format($latestData->temp_ds18 ?? 0, 1) }}°C</strong></div>
+                            <div><strong>{{ number_format($latestData->temperature ?? 0, 1) }}°C</strong></div>
                         </div>
 
                         <div class="mb-3">
                             <label class="text-muted small">Latest Moisture</label>
                             <div>
-                                <strong class="{{ ($latestData->moist ?? 0) < 30 ? 'text-danger' : 'text-success' }}">
-                                    {{ number_format($latestData->moist ?? 0, 1) }}%
+                                <strong class="{{ ($latestData->soil_moisture ?? 0) < 30 ? 'text-danger' : 'text-success' }}">
+                                    {{ number_format($latestData->soil_moisture ?? 0, 1) }}%
                                 </strong>
                             </div>
                         </div>
@@ -155,8 +155,8 @@
                         <div class="mb-0">
                             <label class="text-muted small">Battery Voltage</label>
                             <div>
-                                <strong class="{{ ($latestData->volt ?? 0) < 3.0 ? 'text-warning' : 'text-success' }}">
-                                    {{ number_format($latestData->volt ?? 0, 2) }}V
+                                <strong class="{{ ($latestData->voltage_v ?? 0) < 3.0 ? 'text-warning' : 'text-success' }}">
+                                    {{ number_format($latestData->voltage_v ?? 0, 2) }}V
                                 </strong>
                             </div>
                         </div>

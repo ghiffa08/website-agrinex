@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\SensorNodeData;
+use App\Models\SensorData;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 
@@ -14,27 +14,27 @@ class DeviceService
     public function getChartData(int|string $deviceId): array
     {
         return Cache::remember("chart_data_{$deviceId}", 30, function () use ($deviceId) {
-            $rows = SensorNodeData::where('node_id', $deviceId)
-                ->orderBy('received_at', 'desc')
+            $rows = SensorData::where('device_id', $deviceId)
+                ->orderBy('recorded_at', 'desc')
                 ->limit(100)
-                ->get(['received_at', 'temp_c', 'soil_pct'])
-                ->sortBy('received_at')
+                ->get(['recorded_at', 'temperature', 'soil_moisture'])
+                ->sortBy('recorded_at')
                 ->values();
 
-            $labels      = [];
-            $temperature = [];
+            $labels       = [];
+            $temperature  = [];
             $soilMoisture = [];
 
             foreach ($rows as $row) {
-                $labels[]       = Carbon::parse($row->received_at)->format('H:i');
-                $temperature[]  = (float) $row->temp_c;
-                $soilMoisture[] = (float) $row->soil_pct;
+                $labels[]       = Carbon::parse($row->recorded_at)->format('H:i');
+                $temperature[]  = (float) $row->temperature;
+                $soilMoisture[] = (float) $row->soil_moisture;
             }
 
             return [
                 'labels'   => $labels,
                 'datasets' => [
-                    'temperature'  => $temperature,
+                    'temperature'   => $temperature,
                     'soil_moisture' => $soilMoisture,
                 ],
             ];

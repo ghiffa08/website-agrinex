@@ -111,22 +111,22 @@
                             <td>{{ $node->lokasi ?? '-' }}</td>
                             <td>
                                 @if($node->latestSensorData)
-                                    <small>{{ $node->latestSensorData->received_at->format('d/m/Y H:i') }}</small>
+                                    <small>{{ $node->latestSensorData->recorded_at->format('d/m/Y H:i') }}</small>
                                 @else
                                     <small class="text-muted">No data</small>
                                 @endif
                             </td>
                             <td>
                                 @if($node->latestSensorData)
-                                    {{ number_format($node->latestSensorData->temp_ds18, 1) }}°C
+                                    {{ number_format($node->latestSensorData->temperature, 1) }}°C
                                 @else
                                     -
                                 @endif
                             </td>
                             <td>
                                 @if($node->latestSensorData)
-                                    <span class="badge {{ $node->latestSensorData->moist < 30 ? 'bg-danger' : 'bg-success' }}">
-                                        {{ number_format($node->latestSensorData->moist, 1) }}%
+                                    <span class="badge {{ $node->latestSensorData->soil_moisture < 30 ? 'bg-danger' : 'bg-success' }}">
+                                        {{ number_format($node->latestSensorData->soil_moisture, 1) }}%
                                     </span>
                                 @else
                                     -
@@ -162,7 +162,7 @@
                             <td>
                                 @php
                                     $isOnline = $node->latestSensorData && 
-                                                $node->latestSensorData->received_at->diffInHours(now()) < 1;
+                                                $node->latestSensorData->recorded_at->diffInHours(now()) < 1;
                                 @endphp
                                 <span class="node-badge {{ $isOnline ? 'online' : 'offline' }}">
                                     <span class="status-dot {{ $isOnline ? 'online' : 'offline' }}"></span>
