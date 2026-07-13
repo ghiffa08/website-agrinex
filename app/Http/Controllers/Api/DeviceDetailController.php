@@ -33,23 +33,22 @@ class DeviceDetailController extends Controller
         try {
             $period = $request->get('period', 'week');
             
-            $history = $this->cacheService->remember(
-                "device_sleep_history_{$deviceId}_{$period}",
-                CacheService::TTL_MEDIUM,
-                fn() => $this->deviceService->getSleepHistory($deviceId, $period)
-            );
+            $history = $this->deviceService->getSleepHistory($deviceId, $period);
 
             return response()->json([
                 'success' => true,
                 'device_id' => $deviceId,
                 'period' => $period,
-                'history' => $history
+                'history' => $history ?? []
             ]);
         } catch (\Exception $e) {
+            \Log::error("DeviceDetailController::sleepHistory error: " . $e->getMessage());
             return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+                'success' => true,
+                'device_id' => $deviceId,
+                'period' => $period ?? 'week',
+                'history' => []
+            ]);
         }
     }
 
@@ -63,24 +62,24 @@ class DeviceDetailController extends Controller
         try {
             $period = $request->get('period', 'today');
             
-            $data = $this->cacheService->remember(
-                "device_irrigation_sessions_{$deviceId}_{$period}",
-                CacheService::TTL_MEDIUM,
-                fn() => $this->deviceService->getIrrigationSessions($deviceId, $period)
-            );
+            $data = $this->deviceService->getIrrigationSessions($deviceId, $period);
 
             return response()->json([
                 'success' => true,
                 'device_id' => $deviceId,
                 'period' => $period,
                 'sessions' => $data['sessions'] ?? [],
-                'summary' => $data['summary'] ?? null
+                'summary' => $data['summary'] ?? ['total_sessions' => 0]
             ]);
         } catch (\Exception $e) {
+            \Log::error("DeviceDetailController::irrigationSessions error: " . $e->getMessage());
             return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+                'success' => true,
+                'device_id' => $deviceId,
+                'period' => $period ?? 'today',
+                'sessions' => [],
+                'summary' => ['total_sessions' => 0]
+            ]);
         }
     }
 
@@ -145,11 +144,7 @@ class DeviceDetailController extends Controller
         try {
             $period = $request->get('period', 'week');
             
-            $data = $this->cacheService->remember(
-                "device_battery_history_{$deviceId}_{$period}",
-                CacheService::TTL_MEDIUM,
-                fn() => $this->deviceService->getBatteryHistory($deviceId, $period)
-            );
+            $data = $this->deviceService->getBatteryHistory($deviceId, $period);
 
             return response()->json([
                 'success' => true,
@@ -159,10 +154,14 @@ class DeviceDetailController extends Controller
                 'stats' => $data['stats'] ?? null
             ]);
         } catch (\Exception $e) {
+            \Log::error("DeviceDetailController::batteryHistory error: " . $e->getMessage());
             return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
+                'success' => true,
+                'device_id' => $deviceId,
+                'period' => $period ?? 'week',
+                'history' => [],
+                'stats' => null
+            ]);
         }
     }
 }

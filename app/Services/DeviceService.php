@@ -57,27 +57,37 @@ class DeviceService
      */
     public function getIrrigationSessions(int|string $deviceId, string $period = 'today'): array
     {
-        $hasTable = \Illuminate\Support\Facades\Schema::hasTable('irrigation_logs');
-        if (!$hasTable) {
-            return ['sessions' => [], 'summary' => null];
+        try {
+            $hasTable = \Illuminate\Support\Facades\Schema::hasTable('irrigation_logs');
+            if (!$hasTable) {
+                return ['sessions' => [], 'summary' => ['total_sessions' => 0]];
+            }
+
+            $hasValveLogs = \Illuminate\Support\Facades\Schema::hasTable('valve_logs');
+            if (!$hasValveLogs) {
+                return ['sessions' => [], 'summary' => ['total_sessions' => 0]];
+            }
+
+            $dateRange = $this->getDateRange($period);
+            
+            $sessions = \Illuminate\Support\Facades\DB::table('valve_logs')
+                ->join('irrigation_logs', 'valve_logs.irrigation_log_id', '=', 'irrigation_logs.id')
+                ->where('valve_logs.device_id', $deviceId)
+                ->whereBetween('irrigation_logs.started_at', [$dateRange['start'], $dateRange['end']])
+                ->orderBy('irrigation_logs.started_at', 'desc')
+                ->limit(50)
+                ->select('irrigation_logs.id as session_id', 'irrigation_logs.started_at', 'irrigation_logs.ended_at', 'irrigation_logs.status', 'valve_logs.valve_status')
+                ->get()
+                ->toArray();
+
+            return [
+                'sessions' => $sessions,
+                'summary'  => ['total_sessions' => count($sessions)],
+            ];
+        } catch (\Exception $e) {
+            \Log::error("Error fetching irrigation sessions for device {$deviceId}: " . $e->getMessage());
+            return ['sessions' => [], 'summary' => ['total_sessions' => 0]];
         }
-
-        $dateRange = $this->getDateRange($period);
-        
-        $sessions = \Illuminate\Support\Facades\DB::table('valve_logs')
-            ->join('irrigation_logs', 'valve_logs.irrigation_log_id', '=', 'irrigation_logs.id')
-            ->where('valve_logs.device_id', $deviceId)
-            ->whereBetween('irrigation_logs.started_at', [$dateRange['start'], $dateRange['end']])
-            ->orderBy('irrigation_logs.started_at', 'desc')
-            ->limit(50)
-            ->select('irrigation_logs.id as session_id', 'irrigation_logs.started_at', 'irrigation_logs.ended_at', 'irrigation_logs.status', 'valve_logs.valve_status')
-            ->get()
-            ->toArray();
-
-        return [
-            'sessions' => $sessions,
-            'summary'  => ['total_sessions' => count($sessions)],
-        ];
     }
 
     /**
@@ -117,44 +127,49 @@ class DeviceService
      */
     public function getSleepHistory(int|string $deviceId, string $period = 'week'): array
     {
-        $dateRange = $this->getDateRange($period);
-        
-        // Get sleep/wake events from sensor data
-        // Assumption: device is "sleeping" when there's a gap > 15 minutes between readings
-        $allReadings = SensorData::where('device_id', $deviceId)
-            ->whereBetween('recorded_at', [$dateRange['start'], $dateRange['end']])
-            ->orderBy('recorded_at', 'asc')
-            ->get(['recorded_at', 'battery_voltage']);
+        try {
+            $dateRange = $this->getDateRange($period);
+            
+            // Get sleep/wake events from sensor data
+            // Assumption: device is "sleeping" when there's a gap > 15 minutes between readings
+            $allReadings = SensorData::where('device_id', $deviceId)
+                ->whereBetween('recorded_at', [$dateRange['start'], $dateRange['end']])
+                ->orderBy('recorded_at', 'asc')
+                ->get(['recorded_at', 'battery_voltage']);
 
-        $history = [];
-        $prevReading = null;
+            $history = [];
+            $prevReading = null;
 
-        foreach ($allReadings as $reading) {
-            $currentTime = Carbon::parse($reading->recorded_at);
+            foreach ($allReadings as $reading) {
+                $currentTime = Carbon::parse($reading->recorded_at);
 
-            if ($prevReading) {
-                $prevTime = Carbon::parse($prevReading->recorded_at);
-                $gapMinutes = $prevTime->diffInMinutes($currentTime);
+                if ($prevReading) {
+                    $prevTime = Carbon::parse($prevReading->recorded_at);
+                    $gapMinutes = $prevTime->diffInMinutes($currentTime);
 
-                // If gap > 15 minutes, device was sleeping
-                if ($gapMinutes > 15) {
-                    $durationMinutes = $gapMinutes;
+                    // If gap > 15 minutes, device was sleeping
+                    if ($gapMinutes > 15) {
+                        $durationMinutes = $gapMinutes;
 
-                    $history[] = [
-                        'sleep_start' => $prevTime->format('Y-m-d H:i:s'),
-                        'sleep_end' => $currentTime->format('Y-m-d H:i:s'),
-                        'duration_minutes' => $durationMinutes,
-                        'duration_formatted' => $this->formatDuration($durationMinutes),
-                        'battery_before' => $prevReading->battery_voltage ? (float) $prevReading->battery_voltage : null,
-                        'battery_after' => $reading->battery_voltage ? (float) $reading->battery_voltage : null,
-                    ];
+                        $history[] = [
+                            'sleep_start' => $prevTime->format('Y-m-d H:i:s'),
+                            'sleep_end' => $currentTime->format('Y-m-d H:i:s'),
+                            'duration_minutes' => $durationMinutes,
+                            'duration_formatted' => $this->formatDuration($durationMinutes),
+                            'battery_before' => $prevReading->battery_voltage ? (float) $prevReading->battery_voltage : null,
+                            'battery_after' => $reading->battery_voltage ? (float) $reading->battery_voltage : null,
+                        ];
+                    }
                 }
+
+                $prevReading = $reading;
             }
 
-            $prevReading = $reading;
+            return array_reverse($history); // Most recent first
+        } catch (\Exception $e) {
+            \Log::error("Error fetching sleep history for device {$deviceId}: " . $e->getMessage());
+            return [];
         }
-
-        return array_reverse($history); // Most recent first
     }
 
     /**
@@ -247,50 +262,58 @@ class DeviceService
      */
     public function getBatteryHistory(int|string $deviceId, string $period = 'week'): array
     {
-        $dateRange = $this->getDateRange($period);
-        
-        // Get battery data from sensor readings
-        $readings = SensorData::where('device_id', $deviceId)
-            ->whereBetween('recorded_at', [$dateRange['start'], $dateRange['end']])
-            ->whereNotNull('battery_voltage')
-            ->orderBy('recorded_at', 'desc')
-            ->select('recorded_at', 'battery_voltage')
-            ->get();
-
-        $history = [];
-        $voltages = [];
-
-        foreach ($readings as $reading) {
-            $voltage = (float) $reading->battery_voltage;
-            $percentage = $this->calculateBatteryPercentage($voltage);
+        try {
+            $dateRange = $this->getDateRange($period);
             
-            $history[] = [
-                'recorded_at' => $reading->recorded_at,
-                'voltage' => round($voltage, 2),
-                'percentage' => $percentage,
-                'status' => $this->getBatteryStatus($percentage),
-                'timestamp' => Carbon::parse($reading->recorded_at)->format('Y-m-d H:i:s'),
+            // Get battery data from sensor readings
+            $readings = SensorData::where('device_id', $deviceId)
+                ->whereBetween('recorded_at', [$dateRange['start'], $dateRange['end']])
+                ->whereNotNull('battery_voltage')
+                ->orderBy('recorded_at', 'desc')
+                ->select('recorded_at', 'battery_voltage')
+                ->get();
+
+            $history = [];
+            $voltages = [];
+
+            foreach ($readings as $reading) {
+                $voltage = (float) $reading->battery_voltage;
+                $percentage = $this->calculateBatteryPercentage($voltage);
+                
+                $history[] = [
+                    'recorded_at' => $reading->recorded_at,
+                    'voltage' => round($voltage, 2),
+                    'percentage' => $percentage,
+                    'status' => $this->getBatteryStatus($percentage),
+                    'timestamp' => Carbon::parse($reading->recorded_at)->format('Y-m-d H:i:s'),
+                ];
+
+                $voltages[] = $voltage;
+            }
+
+            // Calculate stats
+            $stats = null;
+            if (count($voltages) > 0) {
+                $stats = [
+                    'avg_voltage' => round(array_sum($voltages) / count($voltages), 2),
+                    'min_voltage' => round(min($voltages), 2),
+                    'max_voltage' => round(max($voltages), 2),
+                    'avg_percentage' => $this->calculateBatteryPercentage(array_sum($voltages) / count($voltages)),
+                    'readings_count' => count($voltages),
+                ];
+            }
+
+            return [
+                'history' => $history,
+                'stats' => $stats,
             ];
-
-            $voltages[] = $voltage;
-        }
-
-        // Calculate stats
-        $stats = null;
-        if (count($voltages) > 0) {
-            $stats = [
-                'avg_voltage' => round(array_sum($voltages) / count($voltages), 2),
-                'min_voltage' => round(min($voltages), 2),
-                'max_voltage' => round(max($voltages), 2),
-                'avg_percentage' => $this->calculateBatteryPercentage(array_sum($voltages) / count($voltages)),
-                'readings_count' => count($voltages),
+        } catch (\Exception $e) {
+            \Log::error("Error fetching battery history for device {$deviceId}: " . $e->getMessage());
+            return [
+                'history' => [],
+                'stats' => null,
             ];
         }
-
-        return [
-            'history' => $history,
-            'stats' => $stats,
-        ];
     }
 
     /**

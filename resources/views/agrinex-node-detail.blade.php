@@ -129,8 +129,17 @@
                                         </button>
                                     </div>
                                 </div>
-                                <div class="w-full h-[300px]">
+                                <div class="w-full h-[300px] relative">
                                     <canvas id="irrigationChartCanvas"></canvas>
+                                    <div x-show="!deviceSessions.length" class="absolute inset-0 flex items-center justify-center">
+                                        <div class="text-center">
+                                            <svg class="mx-auto h-12 w-12 text-lightText mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                            </svg>
+                                            <p class="text-sm font-bold text-lightText">Tidak ada data sesi irigasi</p>
+                                            <p class="text-xs text-lightText mt-1">untuk periode yang dipilih</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -297,8 +306,17 @@
                                     </div>
                                 </template>
 
-                                <div class="w-full h-[250px]">
+                                <div class="w-full h-[250px] relative">
                                     <canvas id="batteryChartCanvas"></canvas>
+                                    <div x-show="!batteryHistory.length" class="absolute inset-0 flex items-center justify-center">
+                                        <div class="text-center">
+                                            <svg class="mx-auto h-12 w-12 text-lightText mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                            </svg>
+                                            <p class="text-sm font-bold text-lightText">Tidak ada data baterai</p>
+                                            <p class="text-xs text-lightText mt-1">untuk periode yang dipilih</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -362,7 +380,7 @@
 
                 async fetchSessions() {
                     try {
-                        const resp = await fetch(`/api/v1/devices/${this.deviceId}/irrigation/sessions?period=${this.irrigationPeriod}`);
+                        const resp = await fetch(`/api/v1/devices/${this.deviceId}/irrigation-sessions?period=${this.irrigationPeriod}`);
                         if (resp.ok) {
                             const data = await resp.json();
                             this.deviceSessions = data.sessions || [];
