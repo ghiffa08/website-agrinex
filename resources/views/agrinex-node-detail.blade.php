@@ -237,7 +237,7 @@
                                             <template x-if="!sleepHistory.length">
                                                 <tr><td colspan="3" class="px-4 py-4 text-center italic text-lightText">Tidak ada riwayat sleep mode.</td></tr>
                                             </template>
-                                            <template x-for="s in sleepHistory" :key="s.sleep_start">
+                                            <template x-for="(s, index) in sleepHistory" :key="s.sleep_start || index">
                                                 <tr class="border-b border-white/20 last:border-0 hover:bg-white/20 transition-colors">
                                                     <td class="px-4 py-3 text-[10px]" x-text="formatDateTime(s.sleep_start)"></td>
                                                     <td class="px-4 py-3 text-[10px]" x-text="formatDateTime(s.sleep_end)"></td>
@@ -398,8 +398,8 @@
                 deviceSessions: [],
                 deviceSessionsSummary: null,
                 deviceUsageHistory: [],
-                sleepHistory: [],
-                batteryHistory: [],
+                sleepHistory: [], // Initialize empty array to prevent Alpine error
+                batteryHistory: [], // Initialize empty array
                 batteryStats: null,
                 chartObj: null,
                 irrigationChartObj: null,
@@ -492,9 +492,14 @@
                     const ctx = document.getElementById('nodeChartCanvas');
                     if(!ctx) return;
                     
+                    // Destroy existing chart
                     if(this.chartObj) {
                         this.chartObj.destroy();
+                        this.chartObj = null;
                     }
+                    
+                    // If no data, don't create chart
+                    if(!labels.length || (!soilData.length && !tempData.length)) return;
 
                     // Neumorphism styling
                     Chart.defaults.color = '#7e8a9f';
@@ -597,11 +602,16 @@
 
                 renderIrrigationChart() {
                     const ctx = document.getElementById('irrigationChartCanvas');
-                    if(!ctx || !this.deviceSessions.length) return;
+                    if(!ctx) return;
                     
+                    // Destroy existing chart
                     if(this.irrigationChartObj) {
                         this.irrigationChartObj.destroy();
+                        this.irrigationChartObj = null;
                     }
+                    
+                    // If no data, don't create chart (empty state will show)
+                    if(!this.deviceSessions.length) return;
 
                     const labels = this.deviceSessions.map(s => s.index || s.session || '#' + (this.deviceSessions.indexOf(s) + 1));
                     const plannedData = this.deviceSessions.map(s => s.planned_l || s.planned_volume_l || 0);
@@ -673,11 +683,16 @@
 
                 renderBatteryChart() {
                     const ctx = document.getElementById('batteryChartCanvas');
-                    if(!ctx || !this.batteryHistory.length) return;
+                    if(!ctx) return;
                     
+                    // Destroy existing chart
                     if(this.batteryChartObj) {
                         this.batteryChartObj.destroy();
+                        this.batteryChartObj = null;
                     }
+                    
+                    // If no data, don't create chart (empty state will show)
+                    if(!this.batteryHistory.length) return;
 
                     // Sort by timestamp ascending for proper timeline
                     const sortedHistory = [...this.batteryHistory].reverse();
