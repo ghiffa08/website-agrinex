@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-<body x-data="Object.assign(dashboard(), { sleepHistory: [], sleepPeriod: 'week', batteryHistory: [], batteryPeriod: 'week', batteryStats: null })" x-init="initData()"
+<body x-data="Object.assign(dashboard(), { sleepHistory: [], sleepPeriod: 'week', batteryHistory: [], batteryPeriod: 'week', batteryStats: null, sensorPeriod: 'today' })" x-init="initData()"
     class="h-full min-h-screen w-full bg-neuBg text-darkText font-sans antialiased selection:bg-brand selection:text-white relative overflow-x-hidden">
 
     <div class="min-h-screen w-full bg-neuBg font-sans text-darkText" x-data="nodeDetailApp('{{ $deviceId }}')" x-init="initDetail()">
@@ -156,7 +156,26 @@
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {{-- Sensor Chart --}}
                             <div class="bg-neuBg rounded-[2.5rem] p-6 md:p-8 shadow-[8px_8px_16px_#a3b1c6,-8px_-8px_16px_#ffffff]">
-                                <h3 class="text-lg font-bold tracking-tight text-darkText mb-6">Grafik Sensor (24 Jam)</h3>
+                                <div class="flex items-center justify-between mb-6">
+                                    <h3 class="text-lg font-bold tracking-tight text-darkText" x-text="sensorPeriod === 'today' ? 'Grafik Sensor (24 Jam)' : (sensorPeriod === 'week' ? 'Grafik Sensor (7 Hari)' : 'Grafik Sensor (30 Hari)')"></h3>
+                                    <div class="flex gap-2">
+                                        <button @click="sensorPeriod='today'; fetchChartData()" 
+                                                :class="sensorPeriod==='today' ? 'shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand' : 'shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] text-lightText'"
+                                                class="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all">
+                                            Hari Ini
+                                        </button>
+                                        <button @click="sensorPeriod='week'; fetchChartData()" 
+                                                :class="sensorPeriod==='week' ? 'shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand' : 'shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] text-lightText'"
+                                                class="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all">
+                                            Minggu Ini
+                                        </button>
+                                        <button @click="sensorPeriod='month'; fetchChartData()" 
+                                                :class="sensorPeriod==='month' ? 'shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand' : 'shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] text-lightText'"
+                                                class="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all">
+                                            Bulan Ini
+                                        </button>
+                                    </div>
+                                </div>
                                 <div class="w-full h-[300px]">
                                     <canvas id="nodeChartCanvas"></canvas>
                                 </div>
@@ -425,6 +444,7 @@
                 irrigationPeriod: 'today',
                 sleepPeriod: 'week',
                 batteryPeriod: 'week',
+                sensorPeriod: 'today',
 
                 async initDetail() {
                     // Fetch all devices to find this specific node
@@ -497,7 +517,7 @@
 
                 async fetchChartData() {
                     try {
-                        const resp = await fetch(`/api/v1/devices/${this.deviceId}/chart-data`);
+                        const resp = await fetch(`/api/v1/devices/${this.deviceId}/chart-data?period=${this.sensorPeriod}`);
                         if (resp.ok) {
                             const data = await resp.json();
                             const ds = data.datasets || {};

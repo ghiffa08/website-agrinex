@@ -111,18 +111,21 @@ class DeviceDetailController extends Controller
     /**
      * Get chart data (last 24 hours)
      */
-    public function chartData(string $deviceId): JsonResponse
+    public function chartData(string $deviceId, Request $request): JsonResponse
     {
         try {
+            $period = $request->get('period', 'today');
+
             $data = $this->cacheService->remember(
-                "device_chart_data_{$deviceId}",
+                "device_chart_data_{$deviceId}_{$period}",
                 CacheService::TTL_SHORT,
-                fn() => $this->deviceService->getChartData($deviceId)
+                fn() => $this->deviceService->getChartData($deviceId, $period)
             );
 
             return response()->json([
                 'success' => true,
                 'device_id' => $deviceId,
+                'period' => $period,
                 'labels' => $data['labels'] ?? [],
                 'datasets' => $data['datasets'] ?? []
             ]);
