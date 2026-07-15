@@ -229,7 +229,7 @@
                                         <button @click="sleepTimeFormat = (sleepTimeFormat === 'diff' ? 'absolute' : 'diff')" 
                                                 :class="sleepTimeFormat === 'diff' ? 'shadow-[inset_2px_2px_4px_#a3b1c6,inset_-2px_-2px_4px_#ffffff] text-brand' : 'shadow-[2px_2px_4px_#a3b1c6,-2px_-2px_4px_#ffffff] text-lightText'"
                                                 class="px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all flex items-center gap-1">
-                                            <span x-text="sleepTimeFormat === 'diff' ? '⏱️ Waktu Relatif' : '📅 Jam Asli'"></span>
+                                            <span x-text="sleepTimeFormat === 'diff' ? 'Waktu Relatif' : 'Jam Asli'"></span>
                                         </button>
                                         <div class="h-4 w-[1px] bg-white/30 mx-1"></div>
                                         <button @click="sleepPeriod='today'; fetchSleepHistory()" 
@@ -277,7 +277,7 @@
                                             </template>
                                         </tbody>
                                     </table>
-                                </div>>
+                                </div>
                             </div>
                             
                             {{-- Sesi Irigasi --}}
