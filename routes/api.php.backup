@@ -21,12 +21,9 @@ use App\Http\Controllers\Api\DeviceDetailController;
 */
 
 // API v1
-Route::post('/telemetry', [TelemetryApiController::class, 'store'])
-    ->middleware(['throttle:120,1', 'iot.api']);
-Route::get('/nodes/config', [\App\Http\Controllers\Api\NodeConfigController::class, 'getConfig'])
-    ->middleware('throttle:60,1');
-Route::post('/nodes/config', [\App\Http\Controllers\Api\NodeConfigController::class, 'updateConfig'])
-    ->middleware(['throttle:10,1', 'iot.api']);
+Route::post('/telemetry', [TelemetryApiController::class, 'store']);
+Route::get('/nodes/config', [\App\Http\Controllers\Api\NodeConfigController::class, 'getConfig']);
+Route::post('/nodes/config', [\App\Http\Controllers\Api\NodeConfigController::class, 'updateConfig']);
 Route::prefix('v1')->group(function () {
     
     // Data Ingestion Endpoints (NEW - for IoT devices)
@@ -54,20 +51,17 @@ Route::prefix('v1')->group(function () {
     });
     
     // Device Detail Endpoints (NEW - device-specific data)
-    Route::prefix('devices/{deviceId}')
-        ->middleware('throttle:120,1')
-        ->group(function () {
-            Route::get('/sleep-history', [DeviceDetailController::class, 'sleepHistory']);
-            Route::get('/irrigation-sessions', [DeviceDetailController::class, 'irrigationSessions']);
-            Route::get('/usage-history', [DeviceDetailController::class, 'usageHistory']);
-            Route::get('/chart-data', [DeviceDetailController::class, 'chartData']);
-            Route::get('/battery-history', [DeviceDetailController::class, 'batteryHistory']);
-        });
+    Route::prefix('devices/{deviceId}')->group(function () {
+        Route::get('/sleep-history', [DeviceDetailController::class, 'sleepHistory']);
+        Route::get('/irrigation-sessions', [DeviceDetailController::class, 'irrigationSessions']);
+        Route::get('/usage-history', [DeviceDetailController::class, 'usageHistory']);
+        Route::get('/chart-data', [DeviceDetailController::class, 'chartData']);
+        Route::get('/battery-history', [DeviceDetailController::class, 'batteryHistory']);
+    });
     
     // Sensor Data Endpoints
     Route::prefix('sensor-data')->group(function () {
-        Route::post('/', [SensorDataController::class, 'store'])
-            ->middleware(['throttle:120,1', 'iot.api']);
+        Route::post('/', [SensorDataController::class, 'store']);
         Route::get('/', [SensorDataController::class, 'index']);
         Route::get('/statistics', [SensorDataController::class, 'statistics']);
         Route::get('/latest', [SensorDataController::class, 'latest']);
