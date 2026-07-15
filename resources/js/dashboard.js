@@ -51,6 +51,11 @@ function dashboard() {
         deviceSessions: [],
         deviceSessionsSummary: null,
         deviceUsageHistory: [],
+        sleepHistory: [],
+        sleepPeriod: 'week',
+        batteryHistory: [],
+        batteryPeriod: 'week',
+        batteryStats: null,
         loadingDeviceDetail: false,
 
         // --- Translations ---

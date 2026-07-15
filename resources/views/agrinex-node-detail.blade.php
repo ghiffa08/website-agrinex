@@ -239,8 +239,8 @@
                                             </tr>
                                             <template x-for="(s, index) in sleepHistory" :key="s.sleep_start || index">
                                                 <tr class="border-b border-white/20 last:border-0 hover:bg-white/20 transition-colors">
-                                                    <td class="px-4 py-3 text-[10px]" x-text="formatDateTime(s.sleep_start)"></td>
-                                                    <td class="px-4 py-3 text-[10px]" x-text="formatDateTime(s.sleep_end)"></td>
+                                                    <td class="px-4 py-3 text-[10px]" x-text="s.sleep_start_human || formatDateTime(s.sleep_start)"></td>
+                                                    <td class="px-4 py-3 text-[10px]" x-text="s.sleep_end_human || formatDateTime(s.sleep_end)"></td>
                                                     <td class="px-4 py-3 text-right text-brand font-bold" x-text="s.duration_formatted"></td>
                                                 </tr>
                                             </template>
