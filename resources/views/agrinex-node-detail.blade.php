@@ -225,7 +225,16 @@
                                     </div>
                                 </div>
                                 <div class="overflow-x-auto bg-neuBg shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] rounded-2xl p-2 max-h-[300px] overflow-y-auto no-scrollbar">
-                                    <table class="min-w-full text-xs text-left">
+                                    {{-- Empty State --}}
+                                    <div x-show="!sleepHistory.length" class="flex flex-col items-center justify-center py-8 text-center">
+                                        <svg class="h-8 w-8 text-lightText mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <p class="text-xs text-lightText italic">Tidak ada riwayat sleep mode.</p>
+                                    </div>
+
+                                    {{-- Table --}}
+                                    <table x-show="sleepHistory.length" class="min-w-full text-xs text-left">
                                         <thead class="text-lightText font-bold border-b-2 border-white/30 sticky top-0 bg-neuBg/90 backdrop-blur-md">
                                             <tr>
                                                 <th class="px-4 py-3">Waktu Mulai</th>
@@ -234,10 +243,7 @@
                                             </tr>
                                         </thead>
                                         <tbody class="text-darkText font-medium">
-                                            <tr x-show="!sleepHistory.length">
-                                                <td colspan="3" class="px-4 py-4 text-center italic text-lightText">Tidak ada riwayat sleep mode.</td>
-                                            </tr>
-                                            <template x-for="(s, index) in sleepHistory" :key="s.sleep_start || index">
+                                            <template x-for="(s, index) in sleepHistory" :key="index">
                                                 <tr class="border-b border-white/20 last:border-0 hover:bg-white/20 transition-colors">
                                                     <td class="px-4 py-3 text-[10px]" x-text="s.sleep_start_human || formatDateTime(s.sleep_start)"></td>
                                                     <td class="px-4 py-3 text-[10px]" x-text="s.sleep_end_human || formatDateTime(s.sleep_end)"></td>
@@ -262,7 +268,16 @@
                                 </template>
 
                                 <div class="overflow-x-auto bg-neuBg shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] rounded-2xl p-2 max-h-[300px] overflow-y-auto no-scrollbar">
-                                    <table class="min-w-full text-xs text-left">
+                                    {{-- Empty State --}}
+                                    <div x-show="!deviceSessions.length" class="flex flex-col items-center justify-center py-8 text-center">
+                                        <svg class="h-8 w-8 text-lightText mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <p class="text-xs text-lightText italic">Tidak ada data sesi hari ini.</p>
+                                    </div>
+
+                                    {{-- Table --}}
+                                    <table x-show="deviceSessions.length" class="min-w-full text-xs text-left">
                                         <thead class="text-lightText font-bold border-b-2 border-white/30 sticky top-0 bg-neuBg/90 backdrop-blur-md">
                                             <tr>
                                                 <th class="px-4 py-3">Sesi</th>
@@ -272,10 +287,7 @@
                                             </tr>
                                         </thead>
                                         <tbody class="text-darkText font-medium">
-                                            <tr x-show="!deviceSessions.length">
-                                                <td colspan="4" class="px-4 py-4 text-center italic text-lightText">Tidak ada data sesi hari ini.</td>
-                                            </tr>
-                                            <template x-for="s in deviceSessions" :key="s.id || s.index">
+                                            <template x-for="(s, index) in deviceSessions" :key="index">
                                                 <tr class="border-b border-white/20 last:border-0 hover:bg-white/20 transition-colors">
                                                     <td class="px-4 py-3" x-text="s.index || s.session || '-' "></td>
                                                     <td class="px-4 py-3" x-text="s.time || s.start_time || '-' "></td>
@@ -292,7 +304,16 @@
                             <div class="bg-neuBg rounded-[2.5rem] p-6 md:p-8 shadow-[8px_8px_16px_#a3b1c6,-8px_-8px_16px_#ffffff]">
                                 <h3 class="text-lg font-bold tracking-tight text-darkText mb-4">Riwayat Penggunaan (7 Hari)</h3>
                                 <div class="overflow-x-auto bg-neuBg shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] rounded-2xl p-2 max-h-[300px] overflow-y-auto no-scrollbar">
-                                    <table class="min-w-full text-xs text-left">
+                                    {{-- Empty State --}}
+                                    <div x-show="!deviceUsageHistory.length" class="flex flex-col items-center justify-center py-8 text-center">
+                                        <svg class="h-8 w-8 text-lightText mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <p class="text-xs text-lightText italic">Tidak ada riwayat.</p>
+                                    </div>
+
+                                    {{-- Table --}}
+                                    <table x-show="deviceUsageHistory.length" class="min-w-full text-xs text-left">
                                         <thead class="text-lightText font-bold border-b-2 border-white/30 sticky top-0 bg-neuBg/90 backdrop-blur-md">
                                             <tr>
                                                 <th class="px-4 py-3">Tanggal</th>
@@ -301,10 +322,7 @@
                                             </tr>
                                         </thead>
                                         <tbody class="text-darkText font-medium">
-                                            <tr x-show="!deviceUsageHistory.length">
-                                                <td colspan="3" class="px-4 py-4 text-center italic text-lightText">Tidak ada riwayat.</td>
-                                            </tr>
-                                            <template x-for="h in deviceUsageHistory" :key="h.date || h.day || h.id">
+                                            <template x-for="(h, index) in deviceUsageHistory" :key="index">
                                                 <tr class="border-b border-white/20 last:border-0 hover:bg-white/20 transition-colors">
                                                     <td class="px-4 py-3" x-text="h.date || h.day || '-' "></td>
                                                     <td class="px-4 py-3 text-right" x-text="h.sessions || h.session_count || '-' "></td>
