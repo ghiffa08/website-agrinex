@@ -719,25 +719,25 @@ function dashboard() {
 
         openFullMap() { this.showFullMap = true; this.$nextTick(() => this.initLeafletFull()); },
         closeFullMap() { this.showFullMap = false; },
-        initLeaflet() { 
-            if (this.leafletInited || !window.L) return; 
+        initLeaflet() {
+            if (this.leafletInited || !window.L) return;
             const mapEl = document.getElementById('leafletMap');
             if (!mapEl) return; // Guard: element not found, skip initialization
-            const map = L.map('leafletMap', {zoomControl:true,attributionControl:false}).setView([this.villageCenter.lat,this.villageCenter.lng],15); 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map); 
-            L.polygon(this.villagePolygon,{color:'#16a34a',weight:2,fillOpacity:0.08}).addTo(map); 
-            L.marker([this.villageCenter.lat,this.villageCenter.lng],{title:'Lokasi'}).addTo(map); 
-            this.leafletInited = true; 
+            const map = L.map('leafletMap', {zoomControl:true,attributionControl:false}).setView([this.villageCenter.lat,this.villageCenter.lng],15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+            L.polygon(this.villagePolygon,{color:'#16a34a',weight:2,fillOpacity:0.08}).addTo(map);
+            L.marker([this.villageCenter.lat,this.villageCenter.lng],{title:'Lokasi'}).addTo(map);
+            this.leafletInited = true;
         },
-        initLeafletFull() { 
-            if (this.leafletFullInited || !window.L) return; 
+        initLeafletFull() {
+            if (this.leafletFullInited || !window.L) return;
             const mapEl = document.getElementById('leafletMapFull');
             if (!mapEl) return; // Guard: element not found, skip initialization
-            const map = L.map('leafletMapFull',{zoomControl:true}).setView([this.villageCenter.lat,this.villageCenter.lng],15); 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map); 
-            L.polygon(this.villagePolygon,{color:'#15803d',weight:2,fillOpacity:0.1}).addTo(map); 
-            L.marker([this.villageCenter.lat,this.villageCenter.lng]).bindPopup('Pusat Lahan').addTo(map); 
-            this.leafletFullInited = true; 
+            const map = L.map('leafletMapFull',{zoomControl:true}).setView([this.villageCenter.lat,this.villageCenter.lng],15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+            L.polygon(this.villagePolygon,{color:'#15803d',weight:2,fillOpacity:0.1}).addTo(map);
+            L.marker([this.villageCenter.lat,this.villageCenter.lng]).bindPopup('Pusat Lahan').addTo(map);
+            this.leafletFullInited = true;
         },
 
         // --- Refresh ---

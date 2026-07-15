@@ -234,9 +234,9 @@
                                             </tr>
                                         </thead>
                                         <tbody class="text-darkText font-medium">
-                                            <template x-if="!sleepHistory.length">
-                                                <tr><td colspan="3" class="px-4 py-4 text-center italic text-lightText">Tidak ada riwayat sleep mode.</td></tr>
-                                            </template>
+                                            <tr x-show="!sleepHistory.length">
+                                                <td colspan="3" class="px-4 py-4 text-center italic text-lightText">Tidak ada riwayat sleep mode.</td>
+                                            </tr>
                                             <template x-for="(s, index) in sleepHistory" :key="s.sleep_start || index">
                                                 <tr class="border-b border-white/20 last:border-0 hover:bg-white/20 transition-colors">
                                                     <td class="px-4 py-3 text-[10px]" x-text="formatDateTime(s.sleep_start)"></td>
@@ -272,9 +272,9 @@
                                             </tr>
                                         </thead>
                                         <tbody class="text-darkText font-medium">
-                                            <template x-if="!deviceSessions.length">
-                                                <tr><td colspan="4" class="px-4 py-4 text-center italic text-lightText">Tidak ada data sesi hari ini.</td></tr>
-                                            </template>
+                                            <tr x-show="!deviceSessions.length">
+                                                <td colspan="4" class="px-4 py-4 text-center italic text-lightText">Tidak ada data sesi hari ini.</td>
+                                            </tr>
                                             <template x-for="s in deviceSessions" :key="s.id || s.index">
                                                 <tr class="border-b border-white/20 last:border-0 hover:bg-white/20 transition-colors">
                                                     <td class="px-4 py-3" x-text="s.index || s.session || '-' "></td>
@@ -301,9 +301,9 @@
                                             </tr>
                                         </thead>
                                         <tbody class="text-darkText font-medium">
-                                            <template x-if="!deviceUsageHistory.length">
-                                                <tr><td colspan="3" class="px-4 py-4 text-center italic text-lightText">Tidak ada riwayat.</td></tr>
-                                            </template>
+                                            <tr x-show="!deviceUsageHistory.length">
+                                                <td colspan="3" class="px-4 py-4 text-center italic text-lightText">Tidak ada riwayat.</td>
+                                            </tr>
                                             <template x-for="h in deviceUsageHistory" :key="h.date || h.day || h.id">
                                                 <tr class="border-b border-white/20 last:border-0 hover:bg-white/20 transition-colors">
                                                     <td class="px-4 py-3" x-text="h.date || h.day || '-' "></td>
