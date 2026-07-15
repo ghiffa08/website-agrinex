@@ -7,6 +7,6 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-<script src="{{ asset('js/satellite-map.js') }}"></script>
-<script src="{{ asset('js/charts-fix.js') }}"></script>
-<script src="{{ asset('js/dashboard.js') }}"></script>
+<script src="{{ asset('js/satellite-map.js') }}?v={{ time() }}"></script>
+<script src="{{ asset('js/charts-fix.js') }}?v={{ time() }}"></script>
+<script src="{{ asset('js/dashboard.js') }}?v={{ time() }}"></script>

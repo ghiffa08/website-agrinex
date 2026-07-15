@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-<body x-data="dashboard()" x-init="initData()"
+<body x-data="Object.assign(dashboard(), { sleepHistory: [], sleepPeriod: 'week', batteryHistory: [], batteryPeriod: 'week', batteryStats: null })" x-init="initData()"
     class="h-full min-h-screen w-full bg-neuBg text-darkText font-sans antialiased selection:bg-brand selection:text-white relative overflow-x-hidden">
 
     <div class="min-h-screen w-full bg-neuBg font-sans text-darkText" x-data="nodeDetailApp('{{ $deviceId }}')" x-init="initDetail()">
