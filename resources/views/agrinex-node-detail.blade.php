@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-<body x-data="Object.assign(dashboard(), { sleepHistory: [], sleepPeriod: 'week', batteryHistory: [], batteryPeriod: 'week', batteryStats: null, sensorPeriod: 'today' })" x-init="initData()"
+<body x-data="Object.assign(dashboard(), { sleepHistory: [], sleepPeriod: 'week', batteryHistory: [], batteryPeriod: 'week', batteryStats: null, sensorPeriod: 'today', sleepTimeFormat: 'diff' })" x-init="initData()"
     class="h-full min-h-screen w-full bg-neuBg text-darkText font-sans antialiased selection:bg-brand selection:text-white relative overflow-x-hidden">
 
     <div class="min-h-screen w-full bg-neuBg font-sans text-darkText" x-data="nodeDetailApp('{{ $deviceId }}')" x-init="initDetail()">
@@ -220,12 +220,18 @@
 
                         {{-- Tables Section --}}
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            
-                            {{-- Sleep History --}}
+                                                        {{-- Sleep History --}}
                             <div class="bg-neuBg rounded-[2.5rem] p-6 md:p-8 shadow-[8px_8px_16px_#a3b1c6,-8px_-8px_16px_#ffffff]">
                                 <div class="flex items-center justify-between mb-4">
                                     <h3 class="text-lg font-bold tracking-tight text-darkText">Riwayat Sleep Mode</h3>
-                                    <div class="flex gap-2">
+                                    <div class="flex items-center gap-2">
+                                        {{-- Format Toggle --}}
+                                        <button @click="sleepTimeFormat = (sleepTimeFormat === 'diff' ? 'absolute' : 'diff')" 
+                                                :class="sleepTimeFormat === 'diff' ? 'shadow-[inset_2px_2px_4px_#a3b1c6,inset_-2px_-2px_4px_#ffffff] text-brand' : 'shadow-[2px_2px_4px_#a3b1c6,-2px_-2px_4px_#ffffff] text-lightText'"
+                                                class="px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all flex items-center gap-1">
+                                            <span x-text="sleepTimeFormat === 'diff' ? '⏱️ Waktu Relatif' : '📅 Jam Asli'"></span>
+                                        </button>
+                                        <div class="h-4 w-[1px] bg-white/30 mx-1"></div>
                                         <button @click="sleepPeriod='today'; fetchSleepHistory()" 
                                                 :class="sleepPeriod==='today' ? 'shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand' : 'shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] text-lightText'"
                                                 class="px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all">
@@ -243,7 +249,7 @@
                                         </button>
                                     </div>
                                 </div>
-                                <div class="overflow-x-auto bg-neuBg shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] rounded-2xl p-2 max-h-[300px] overflow-y-auto no-scrollbar">
+                                <div class="overflow-x-auto bg-neuBg shadow-[inset_4px_4px_8px_#a3b1c6,inset_-2px_-2px_4px_#ffffff] rounded-2xl p-2 max-h-[300px] overflow-y-auto no-scrollbar">
                                     {{-- Empty State --}}
                                     <div x-show="!sleepHistory.length" class="flex flex-col items-center justify-center py-8 text-center">
                                         <svg class="h-8 w-8 text-lightText mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -264,14 +270,14 @@
                                         <tbody class="text-darkText font-medium">
                                             <template x-for="(s, index) in sleepHistory" :key="index">
                                                 <tr class="border-b border-white/20 last:border-0 hover:bg-white/20 transition-colors">
-                                                    <td class="px-4 py-3 text-[10px]" x-text="s.sleep_start_human || formatDateTime(s.sleep_start)"></td>
-                                                    <td class="px-4 py-3 text-[10px]" x-text="s.sleep_end_human || formatDateTime(s.sleep_end)"></td>
+                                                    <td class="px-4 py-3 text-[10px]" x-text="sleepTimeFormat === 'diff' ? (s.sleep_start_human || formatDateTime(s.sleep_start)) : formatDateTime(s.sleep_start)"></td>
+                                                    <td class="px-4 py-3 text-[10px]" x-text="sleepTimeFormat === 'diff' ? (s.sleep_end_human || formatDateTime(s.sleep_end)) : formatDateTime(s.sleep_end)"></td>
                                                     <td class="px-4 py-3 text-right text-brand font-bold" x-text="s.duration_formatted"></td>
                                                 </tr>
                                             </template>
                                         </tbody>
                                     </table>
-                                </div>
+                                </div>>
                             </div>
                             
                             {{-- Sesi Irigasi --}}
@@ -445,6 +451,7 @@
                 sleepPeriod: 'week',
                 batteryPeriod: 'week',
                 sensorPeriod: 'today',
+                sleepTimeFormat: 'diff',
 
                 async initDetail() {
                     // Fetch all devices to find this specific node

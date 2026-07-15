@@ -56,6 +56,7 @@ function dashboard() {
         batteryHistory: [],
         batteryPeriod: 'week',
         batteryStats: null,
+        sleepTimeFormat: 'diff',
         loadingDeviceDetail: false,
 
         // --- Translations ---
