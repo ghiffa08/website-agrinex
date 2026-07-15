@@ -15,6 +15,11 @@ class VerifyIotApiKey
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // Bypass check if configured in .env (allows older ESP32 firmware to run without re-flashing)
+        if (env('BYPASS_IOT_API_KEY', false) === true) {
+            return $next($request);
+        }
+
         // Mendapatkan API Key dari .env tanpa nilai default hardcoded
         $expectedApiKey = env('IOT_API_KEY');
         
