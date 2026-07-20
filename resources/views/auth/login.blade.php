@@ -77,14 +77,15 @@
             </button>
         </form>
 
-        <div class="flex items-center my-8">
+        <!-- Divider (only show if not mobile app) -->
+        <div id="oauth-divider" class="flex items-center my-8">
             <div class="flex-grow border-t border-[#a3b1c6]/30"></div>
             <span class="px-4 text-xs font-semibold tracking-wider text-lightText uppercase">Or continue with</span>
             <div class="flex-grow border-t border-[#a3b1c6]/30"></div>
         </div>
 
-        <!-- Google Login -->
-        <a href="{{ route('google.login') }}" 
+        <!-- Google Login (hide in mobile app) -->
+        <a id="google-login" href="{{ route('google.login') }}" 
             class="flex items-center justify-center gap-3 w-full py-3.5 rounded-xl font-bold text-darkText bg-neuBg
             shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff]
             active:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]
@@ -99,6 +100,21 @@
         </a>
 
     </div>
+
+    <script>
+        // Detect if running in Capacitor mobile app
+        const isCapacitor = window.Capacitor !== undefined;
+        
+        if (isCapacitor) {
+            // Hide Google OAuth button dan divider di mobile app
+            // (karena OAuth redirect ke browser eksternal)
+            const googleBtn = document.getElementById('google-login');
+            const divider = document.getElementById('oauth-divider');
+            
+            if (googleBtn) googleBtn.style.display = 'none';
+            if (divider) divider.style.display = 'none';
+        }
+    </script>
 
 </body>
 </html>

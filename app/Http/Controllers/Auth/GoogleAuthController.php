@@ -11,14 +11,6 @@ class GoogleAuthController extends Controller
 {
     public function redirect()
     {
-        // Check if request from mobile app
-        $isMobile = request()->get('mobile') === '1';
-        
-        if ($isMobile) {
-            // Store mobile flag in session untuk callback
-            session(['oauth_mobile' => true]);
-        }
-        
         return Socialite::driver('google')->redirect();
     }
 
@@ -52,31 +44,11 @@ class GoogleAuthController extends Controller
             }
 
             Auth::login($user);
-            $user->updateLastLogin();
-
-            // Check if from mobile app
-            $isMobile = session('oauth_mobile', false);
             
-            if ($isMobile) {
-                // Clear mobile flag
-                session()->forget('oauth_mobile');
-                
-                // Generate session token untuk mobile
-                $sessionToken = hash('sha256', $user->id . time() . config('app.key'));
-                
-                // Store token in cache (5 minutes TTL)
-                cache()->put('oauth_mobile_' . $sessionToken, [
-                    'user_id' => $user->id,
-                    'session_id' => session()->getId()
-                ], now()->addMinutes(5));
-                
-                // Deep link redirect ke app
-                $deepLink = 'agrinexsmartdrip://oauth/callback?' . http_build_query([
-                    'token' => $sessionToken,
-                    'session' => session()->getId()
-                ]);
-                
-                return redirect($deepLink);
+            try {
+                $user->updateLastLogin();
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to update last login: ' . $e->getMessage());
             }
 
             return redirect()->intended('/');
@@ -84,15 +56,7 @@ class GoogleAuthController extends Controller
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Google OAuth Error: ' . $e->getMessage());
             
-            // Check if mobile
-            $isMobile = session('oauth_mobile', false);
-            if ($isMobile) {
-                session()->forget('oauth_mobile');
-                $deepLink = 'agrinexsmartdrip://oauth/callback?error=' . urlencode($e->getMessage());
-                return redirect($deepLink);
-            }
-            
-            return redirect('/login')->withErrors(['error' => 'Gagal login dengan Google. Pastikan kredensial OAuth valid. (' . $e->getMessage() . ')']);
+            return redirect('/login')->withErrors(['error' => 'Gagal login dengan Google. Silakan coba lagi.']);
         }
     }
 }
