@@ -131,11 +131,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/users/{id}/toggle-status', [SettingsController::class, 'toggleUserStatus'])->name('users.toggle-status');
     });
 
-    // ESP32 Web Flasher Routes - Admin & Operator
-    Route::prefix('admin/flasher')->name('flasher.')->middleware(['role:admin,operator'])->group(function () {
-        Route::get('/', [\App\Http\Controllers\Admin\FlasherController::class, 'index'])->name('index');
-        Route::get('/firmware-list', [\App\Http\Controllers\Admin\FlasherController::class, 'firmwareList'])->name('firmware-list');
-    });
+    // ESP32 Web Flasher Routes - Moved to Dashboard (Neumorphic Design)
+    Route::get('/flasher', [\App\Http\Controllers\Web\FlasherController::class, 'index'])->name('flasher.index');
+    Route::get('/flasher/firmware-list', [\App\Http\Controllers\Web\FlasherController::class, 'firmwareList'])->name('flasher.firmware-list');
 
     // Admin Data Management Routes removed - legacy system deprecated
     // Use AgriNex dashboard for device and sensor data management
