@@ -11,7 +11,22 @@ class WeatherData extends Model
 
     public $timestamps = false; // Table doesn't have created_at/updated_at
 
-    protected $guarded = ['id'];
+    protected $fillable = [
+        'data_session_id',
+        'device_id',
+        'location',
+        'temp_c',
+        'humidity_pct',
+        'pressure_hpa',
+        'rainfall_mm',
+        'wind_speed_kmh',
+        'wind_direction',
+        'uv_index',
+        'weather_condition',
+        'forecast_source',
+        'water_level_cm',
+        'recorded_at'
+    ];
 
     public function session()
     {

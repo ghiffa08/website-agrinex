@@ -89,8 +89,12 @@ Route::prefix('v1')->group(function () {
         Route::get('/list', [ExportController::class, 'list']);
     });
     
-    // Report Preview API
-    Route::get('/reports/preview', [\App\Http\Controllers\Api\ReportApiController::class, 'preview']);
+    // Report API
+    Route::prefix('reports')->group(function () {
+        Route::get('/preview', [\App\Http\Controllers\Api\ReportApiController::class, 'preview']);
+        Route::get('/data', [\App\Http\Controllers\Api\ReportApiController::class, 'getData']);
+        Route::get('/types', [\App\Http\Controllers\Api\ReportApiController::class, 'getTypes']);
+    });
     
     // Monitor Endpoints
     Route::prefix('monitor')->group(function () {

@@ -9,7 +9,15 @@ class DataSession extends Model
 {
     use HasFactory;
 
-    protected $guarded = ['id', 'created_at', 'updated_at'];
+    protected $fillable = [
+        'session_id',
+        'started_at',
+        'ended_at',
+        'status',
+        'success_count',
+        'failed_count',
+        'notes'
+    ];
 
     protected $casts = [
         'session_id' => 'integer',

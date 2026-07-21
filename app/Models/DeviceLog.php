@@ -9,7 +9,14 @@ class DeviceLog extends Model
 {
     use HasFactory;
 
-    protected $guarded = ['id', 'created_at', 'updated_at'];
+    protected $fillable = [
+        'device_id',
+        'log_type',
+        'message',
+        'severity',
+        'data',
+        'logged_at'
+    ];
 
     public $timestamps = false;
 

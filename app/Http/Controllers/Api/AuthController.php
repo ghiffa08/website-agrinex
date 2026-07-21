@@ -3,21 +3,23 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
+    public function __construct(
+        protected UserRepositoryInterface $userRepo
+    ) {}
+
     /**
-     * Login dengan username/password, return API token
-     * 
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * Login user and generate token
+     * POST /api/v1/auth/login
      */
-    public function login(Request $request)
+    public function login(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'username' => 'required|string',
@@ -32,10 +34,8 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // Find user by username or email
-        $user = User::where('username', $request->username)
-                    ->orWhere('email', $request->username)
-                    ->first();
+        // Find user via Repository
+        $user = $this->userRepo->findByUsernameOrEmail($request->username);
 
         // Check if user exists and password is correct
         if (!$user || !Hash::check($request->password, $user->password_hash)) {
@@ -45,8 +45,8 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // Check if user is active
-        if (!$user->is_active) {
+        // Check if user is active via Repository
+        if (!$this->userRepo->isActive($user)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Account is deactivated'
@@ -56,8 +56,8 @@ class AuthController extends Controller
         // Generate API token (Laravel Sanctum)
         $token = $user->createToken('mobile-app')->plainTextToken;
 
-        // Update last login
-        $user->updateLastLogin();
+        // Update last login via Repository
+        $this->userRepo->updateLastLogin($user);
 
         return response()->json([
             'success' => true,
@@ -78,11 +78,9 @@ class AuthController extends Controller
 
     /**
      * Get authenticated user info
-     * 
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * GET /api/v1/auth/me
      */
-    public function me(Request $request)
+    public function me(Request $request): JsonResponse
     {
         $user = $request->user();
 
@@ -103,11 +101,9 @@ class AuthController extends Controller
 
     /**
      * Refresh token (revoke old, create new)
-     * 
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * POST /api/v1/auth/refresh
      */
-    public function refresh(Request $request)
+    public function refresh(Request $request): JsonResponse
     {
         $user = $request->user();
 
@@ -128,11 +124,9 @@ class AuthController extends Controller
 
     /**
      * Logout (revoke token)
-     * 
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * POST /api/v1/auth/logout
      */
-    public function logout(Request $request)
+    public function logout(Request $request): JsonResponse
     {
         // Revoke current token
         $request->user()->currentAccessToken()->delete();
@@ -145,11 +139,9 @@ class AuthController extends Controller
 
     /**
      * Register new user (optional, untuk self-registration)
-     * 
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * POST /api/v1/auth/register
      */
-    public function register(Request $request)
+    public function register(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'username' => 'required|string|unique:users,username',
@@ -166,7 +158,8 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $user = User::create([
+        // Create user via Repository
+        $user = $this->userRepo->create([
             'username' => $request->username,
             'email' => $request->email,
             'password_hash' => Hash::make($request->password),

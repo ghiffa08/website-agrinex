@@ -6,7 +6,7 @@
     @include('partials.dashboard-scripts')
 </head>
 
-<body x-data="{ reportType: '{{ $reportType }}', startDate: '{{ $startDate }}', endDate: '{{ $endDate }}' }"
+<body x-data="reportApp()" x-init="init()"
     class="h-full min-h-screen w-full bg-neuBg text-darkText font-sans antialiased selection:bg-brand selection:text-white relative overflow-x-hidden">
 
     {{-- Global Splash Screen --}}
@@ -93,7 +93,7 @@
                                 </svg>
                             </div>
                         </div>
-                        <h4 class="text-2xl font-extrabold text-darkText">45</h4>
+                        <h4 class="text-2xl font-extrabold text-darkText" x-text="summary.total_irrigation_sessions || 0"></h4>
                         <p class="text-sm text-lightText font-medium">Total Sesi Irigasi</p>
                     </div>
 
@@ -106,11 +106,11 @@
                                 </svg>
                             </div>
                         </div>
-                        <h4 class="text-2xl font-extrabold text-darkText">1,250 L</h4>
+                        <h4 class="text-2xl font-extrabold text-darkText" x-text="formatNumber(summary.total_water_usage_l) + ' L'"></h4>
                         <p class="text-sm text-lightText font-medium">Total Penggunaan Air</p>
                     </div>
 
-                    {{-- Efisiensi --}}
+                    {{-- Total Devices --}}
                     <div class="bg-neuBg rounded-3xl shadow-[8px_8px_16px_#a3b1c6,-8px_-8px_16px_#ffffff] p-6 border border-white/50">
                         <div class="flex items-start justify-between mb-4">
                             <div class="w-12 h-12 rounded-2xl bg-green-500/10 flex items-center justify-center">
@@ -119,11 +119,11 @@
                                 </svg>
                             </div>
                         </div>
-                        <h4 class="text-2xl font-extrabold text-darkText">87%</h4>
-                        <p class="text-sm text-lightText font-medium">Efisiensi Irigasi</p>
+                        <h4 class="text-2xl font-extrabold text-darkText" x-text="(summary.active_devices || 0) + '/' + (summary.total_devices || 0)"></h4>
+                        <p class="text-sm text-lightText font-medium">Devices Aktif</p>
                     </div>
 
-                    {{-- Durasi Rata-rata --}}
+                    {{-- Sensor Readings --}}
                     <div class="bg-neuBg rounded-3xl shadow-[8px_8px_16px_#a3b1c6,-8px_-8px_16px_#ffffff] p-6 border border-white/50">
                         <div class="flex items-start justify-between mb-4">
                             <div class="w-12 h-12 rounded-2xl bg-purple-500/10 flex items-center justify-center">
@@ -132,8 +132,8 @@
                                 </svg>
                             </div>
                         </div>
-                        <h4 class="text-2xl font-extrabold text-darkText">28 min</h4>
-                        <p class="text-sm text-lightText font-medium">Durasi Rata-rata</p>
+                        <h4 class="text-2xl font-extrabold text-darkText" x-text="formatNumber(summary.total_sensor_readings || 0)"></h4>
+                        <p class="text-sm text-lightText font-medium">Pembacaan Sensor</p>
                     </div>
 
                 </div>
@@ -142,66 +142,112 @@
                 <div class="bg-neuBg rounded-3xl shadow-[8px_8px_16px_#a3b1c6,-8px_-8px_16px_#ffffff] p-6 md:p-8 border border-white/50">
                     <div class="flex items-center justify-between mb-6">
                         <h3 class="text-lg font-bold text-darkText">Laporan Tersedia</h3>
-                        <button @click="$dispatch('export-modal')" 
-                            class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-bold shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] active:scale-95 transition-all">
-                            Ekspor Data
-                        </button>
                     </div>
 
                     <div class="space-y-4">
                         
-                        {{-- Report Item 1 --}}
-                        <div class="flex items-center justify-between p-4 rounded-2xl bg-neuBg shadow-[inset_2px_2px_4px_#a3b1c6,inset_-2px_-2px_4px_#ffffff]">
-                            <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center flex-shrink-0">
-                                    <svg class="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
+                        {{-- Quick Export Buttons --}}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            
+                            {{-- Sensor Data --}}
+                            <div class="flex items-center justify-between p-4 rounded-2xl bg-neuBg shadow-[inset_2px_2px_4px_#a3b1c6,inset_-2px_-2px_4px_#ffffff]">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-darkText">Data Sensor</h4>
+                                        <p class="text-sm text-lightText">Pembacaan sensor lengkap</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h4 class="font-bold text-darkText">Laporan Irigasi Bulanan</h4>
-                                    <p class="text-sm text-lightText">Juni 2026 • 45 sesi • 1,250 L</p>
-                                </div>
+                                <button @click="exportReport('sensor', 'excel')" :disabled="loading"
+                                    class="px-4 py-2 rounded-lg bg-neuBg shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand font-bold text-sm transition-all disabled:opacity-50">
+                                    <span x-show="!loading">Excel</span>
+                                    <span x-show="loading">...</span>
+                                </button>
                             </div>
-                            <button class="px-4 py-2 rounded-lg bg-neuBg shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand font-bold text-sm transition-all">
-                                Lihat
-                            </button>
+
+                            {{-- Weather Data --}}
+                            <div class="flex items-center justify-between p-4 rounded-2xl bg-neuBg shadow-[inset_2px_2px_4px_#a3b1c6,inset_-2px_-2px_4px_#ffffff]">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-5 h-5 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-darkText">Data Cuaca</h4>
+                                        <p class="text-sm text-lightText">Kondisi lingkungan</p>
+                                    </div>
+                                </div>
+                                <button @click="exportReport('weather', 'excel')" :disabled="loading"
+                                    class="px-4 py-2 rounded-lg bg-neuBg shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand font-bold text-sm transition-all disabled:opacity-50">
+                                    <span x-show="!loading">Excel</span>
+                                    <span x-show="loading">...</span>
+                                </button>
+                            </div>
+
+                            {{-- Irrigation Logs --}}
+                            <div class="flex items-center justify-between p-4 rounded-2xl bg-neuBg shadow-[inset_2px_2px_4px_#a3b1c6,inset_-2px_-2px_4px_#ffffff]">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-darkText">Log Irigasi</h4>
+                                        <p class="text-sm text-lightText">Riwayat sesi irigasi</p>
+                                    </div>
+                                </div>
+                                <button @click="exportReport('irrigation', 'excel')" :disabled="loading"
+                                    class="px-4 py-2 rounded-lg bg-neuBg shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand font-bold text-sm transition-all disabled:opacity-50">
+                                    <span x-show="!loading">Excel</span>
+                                    <span x-show="loading">...</span>
+                                </button>
+                            </div>
+
+                            {{-- Water Usage --}}
+                            <div class="flex items-center justify-between p-4 rounded-2xl bg-neuBg shadow-[inset_2px_2px_4px_#a3b1c6,inset_-2px_-2px_4px_#ffffff]">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-5 h-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-darkText">Penggunaan Air</h4>
+                                        <p class="text-sm text-lightText">Statistik per device</p>
+                                    </div>
+                                </div>
+                                <button @click="exportReport('usage', 'excel')" :disabled="loading"
+                                    class="px-4 py-2 rounded-lg bg-neuBg shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand font-bold text-sm transition-all disabled:opacity-50">
+                                    <span x-show="!loading">Excel</span>
+                                    <span x-show="loading">...</span>
+                                </button>
+                            </div>
+
                         </div>
 
-                        {{-- Report Item 2 --}}
-                        <div class="flex items-center justify-between p-4 rounded-2xl bg-neuBg shadow-[inset_2px_2px_4px_#a3b1c6,inset_-2px_-2px_4px_#ffffff]">
-                            <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                                    <svg class="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h4 class="font-bold text-darkText">Analisis Data Sensor</h4>
-                                    <p class="text-sm text-lightText">30 hari terakhir • 4 node aktif</p>
-                                </div>
+                        {{-- Comprehensive Reports --}}
+                        <div class="border-t border-gray-300 pt-4">
+                            <h4 class="text-sm font-bold text-lightText mb-3">Laporan Komprehensif</h4>
+                            
+                            <div class="flex flex-col sm:flex-row gap-3">
+                                <button @click="exportReport('comprehensive', 'pdf')" :disabled="loading"
+                                    class="flex-1 px-6 py-3 rounded-xl bg-red-500 text-white font-bold shadow-[6px_6px_12px_#a3b1c6,-6px_-6px_12px_#ffffff] hover:bg-red-600 active:scale-95 transition-all disabled:opacity-50">
+                                    <span x-show="!loading">📄 Download PDF</span>
+                                    <span x-show="loading">Memproses...</span>
+                                </button>
+                                
+                                <button @click="exportReport('comprehensive', 'excel')" :disabled="loading"
+                                    class="flex-1 px-6 py-3 rounded-xl bg-green-600 text-white font-bold shadow-[6px_6px_12px_#a3b1c6,-6px_-6px_12px_#ffffff] hover:bg-green-700 active:scale-95 transition-all disabled:opacity-50">
+                                    <span x-show="!loading">📊 Download Excel</span>
+                                    <span x-show="loading">Memproses...</span>
+                                </button>
                             </div>
-                            <button class="px-4 py-2 rounded-lg bg-neuBg shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand font-bold text-sm transition-all">
-                                Lihat
-                            </button>
-                        </div>
-
-                        {{-- Report Item 3 --}}
-                        <div class="flex items-center justify-between p-4 rounded-2xl bg-neuBg shadow-[inset_2px_2px_4px_#a3b1c6,inset_-2px_-2px_4px_#ffffff]">
-                            <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center flex-shrink-0">
-                                    <svg class="w-5 h-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h4 class="font-bold text-darkText">Efisiensi Penggunaan Air</h4>
-                                    <p class="text-sm text-lightText">Q2 2026 • Tren meningkat 12%</p>
-                                </div>
-                            </div>
-                            <button class="px-4 py-2 rounded-lg bg-neuBg shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand font-bold text-sm transition-all">
-                                Lihat
-                            </button>
                         </div>
 
                     </div>
@@ -219,6 +265,118 @@
     @include('components.bottom-nav')
 
     </div>
+
+    {{-- Alpine.js Report App --}}
+    <script>
+    function reportApp() {
+        return {
+            reportType: '{{ $reportType }}',
+            startDate: '{{ $startDate }}',
+            endDate: '{{ $endDate }}',
+            summary: {},
+            reportTypes: [],
+            loading: false,
+            exportModal: false,
+
+            async init() {
+                await this.loadSummary();
+                await this.loadReportTypes();
+            },
+
+            async loadSummary() {
+                this.loading = true;
+                try {
+                    const params = new URLSearchParams({
+                        start_date: this.startDate,
+                        end_date: this.endDate
+                    });
+                    
+                    const response = await fetch(`/api/v1/reports/preview?${params}`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.summary = data.summary;
+                    }
+                } catch (error) {
+                    console.error('Load summary failed:', error);
+                } finally {
+                    this.loading = false;
+                }
+            },
+
+            async loadReportTypes() {
+                try {
+                    const response = await fetch('/api/v1/reports/types');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.reportTypes = data.types;
+                    }
+                } catch (error) {
+                    console.error('Load report types failed:', error);
+                }
+            },
+
+            formatNumber(num) {
+                if (!num) return '0';
+                return new Intl.NumberFormat('id-ID').format(num);
+            },
+
+            async exportReport(type, format) {
+                this.loading = true;
+                try {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '{{ route("reports.index") }}/export';
+                    
+                    // CSRF Token
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = '_token';
+                    csrfInput.value = '{{ csrf_token() }}';
+                    form.appendChild(csrfInput);
+                    
+                    // Type
+                    const typeInput = document.createElement('input');
+                    typeInput.type = 'hidden';
+                    typeInput.name = 'type';
+                    typeInput.value = type;
+                    form.appendChild(typeInput);
+                    
+                    // Format
+                    const formatInput = document.createElement('input');
+                    formatInput.type = 'hidden';
+                    formatInput.name = 'format';
+                    formatInput.value = format;
+                    form.appendChild(formatInput);
+                    
+                    // Start Date
+                    const startInput = document.createElement('input');
+                    startInput.type = 'hidden';
+                    startInput.name = 'start_date';
+                    startInput.value = this.startDate;
+                    form.appendChild(startInput);
+                    
+                    // End Date
+                    const endInput = document.createElement('input');
+                    endInput.type = 'hidden';
+                    endInput.name = 'end_date';
+                    endInput.value = this.endDate;
+                    form.appendChild(endInput);
+                    
+                    document.body.appendChild(form);
+                    form.submit();
+                    document.body.removeChild(form);
+                } catch (error) {
+                    console.error('Export failed:', error);
+                    alert('Gagal mengekspor laporan');
+                } finally {
+                    this.loading = false;
+                }
+            }
+        }
+    }
+    </script>
 
 </body>
 </html>

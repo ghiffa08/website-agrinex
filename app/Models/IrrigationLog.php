@@ -9,7 +9,17 @@ class IrrigationLog extends Model
 {
     use HasFactory;
 
-    protected $guarded = ['id', 'created_at', 'updated_at'];
+    protected $fillable = [
+        'session_id',
+        'device_id',
+        'started_at',
+        'finished_at',
+        'duration_minutes',
+        'status',
+        'success_count',
+        'failed_count',
+        'notes'
+    ];
 
     public function valveLogs()
     {

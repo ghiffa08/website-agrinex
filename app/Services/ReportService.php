@@ -136,6 +136,20 @@ class ReportService
     }
 
     /**
+     * Generate comprehensive Excel report (all data in separate sheets)
+     */
+    public function generateComprehensiveExcel(array $filters)
+    {
+        $filename = 'comprehensive_report_' . now()->format('Y-m-d_His') . '.xlsx';
+        
+        return Excel::download(
+            new \App\Exports\ComprehensiveExport($filters, $this->reportRepository),
+            $filename,
+            \Maatwebsite\Excel\Excel::XLSX
+        );
+    }
+
+    /**
      * Validate and normalize filter parameters
      */
     public function normalizeFilters(array $filters): array

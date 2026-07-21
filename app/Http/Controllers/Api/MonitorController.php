@@ -3,21 +3,23 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\DataSession;
-use App\Models\IrrigationLog;
-use App\Models\SensorData;
-use App\Models\WeatherData;
-use App\Models\DeviceLog;
+use App\Repositories\Contracts\MonitorRepositoryInterface;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use App\Models\SensorData;
 
 class MonitorController extends Controller
 {
+    public function __construct(
+        protected MonitorRepositoryInterface $monitorRepo
+    ) {}
+
     /**
      * Get API statistics
      * GET /api/v1/monitor/stats
      */
-    public function getStats(Request $request)
+    public function getStats(Request $request): JsonResponse
     {
         try {
             $stats = [
@@ -26,22 +28,9 @@ class MonitorController extends Controller
                     'type' => config('database.default'),
                     'name' => config('database.connections.mysql.database')
                 ],
-                'tables' => [
-                    'getdata_logs' => DataSession::count(),
-                    'irrigate_logs' => IrrigationLog::count(),
-                    'sensor_node_data' => SensorData::count(),
-                    'sensor_weather_data' => WeatherData::count(),
-                    'node_logs' => DeviceLog::count(),
-                ],
-                'latest_sessions' => [
-                    'getdata' => DataSession::latest()->first(),
-                    'irrigate' => IrrigationLog::latest()->first(),
-                ],
-                'today' => [
-                    'getdata_sessions' => DataSession::whereDate('started_at', date('Y-m-d'))->count(),
-                    'irrigate_sessions' => IrrigationLog::whereDate('started_at', date('Y-m-d'))->count(),
-                    'sensor_readings' => SensorData::whereDate('recorded_at', date('Y-m-d'))->count(),
-                ],
+                'tables' => $this->monitorRepo->getDatabaseStats(),
+                'latest_sessions' => $this->monitorRepo->getLatestSessions(),
+                'today' => $this->monitorRepo->getTodayStats(),
                 'server' => [
                     'php_version' => PHP_VERSION,
                     'laravel_version' => app()->version(),
@@ -59,7 +48,7 @@ class MonitorController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retrieve statistics: ' . $e->getMessage(),
+                'message' => 'Failed to retrieve statistics',
                 'timestamp' => now()->toDateTimeString()
             ], 500);
         }
@@ -69,45 +58,13 @@ class MonitorController extends Controller
      * Get recent logs
      * GET /api/v1/monitor/logs
      */
-    public function getLogs(Request $request)
+    public function getLogs(Request $request): JsonResponse
     {
         try {
             $type = $request->query('type', 'all'); // getdata, irrigate, all
-            $limit = $request->query('limit', 50);
+            $limit = (int) $request->query('limit', 50);
 
-            $logs = [];
-
-            if ($type === 'getdata' || $type === 'all') {
-                $logs['getdata'] = DataSession::with(['sensorData'])
-                    ->orderBy('created_at', 'desc')
-                    ->limit($limit)
-                    ->get()
-                    ->map(function($session) {
-                        return [
-                            'sesi_id_getdata' => $session->session_id,
-                            'status' => $session->status,
-                            'created_at' => $session->created_at,
-                            'node_sukses' => $session->success_count,
-                            'jumlah_node' => $session->success_count + $session->failed_count,
-                        ];
-                    });
-            }
-
-            if ($type === 'irrigate' || $type === 'all') {
-                $logs['irrigate'] = IrrigationLog::with(['valveLogs'])
-                    ->orderBy('created_at', 'desc')
-                    ->limit($limit)
-                    ->get()
-                    ->map(function($session) {
-                        return [
-                            'sesi_id_irrigate' => $session->session_id,
-                            'status' => $session->status,
-                            'created_at' => $session->created_at,
-                            'valve_sukses' => $session->success_count,
-                            'jumlah_valve' => $session->success_count + $session->failed_count,
-                        ];
-                    });
-            }
+            $logs = $this->monitorRepo->getRecentLogs($type, $limit);
 
             return response()->json([
                 'success' => true,
@@ -118,7 +75,7 @@ class MonitorController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retrieve logs: ' . $e->getMessage(),
+                'message' => 'Failed to retrieve logs',
                 'timestamp' => now()->toDateTimeString()
             ], 500);
         }
@@ -128,7 +85,7 @@ class MonitorController extends Controller
      * Check system health
      * GET /api/v1/monitor/health
      */
-    public function health()
+    public function health(): JsonResponse
     {
         try {
             $health = [
@@ -186,7 +143,7 @@ class MonitorController extends Controller
      * Get node status
      * GET /api/v1/monitor/nodes
      */
-    public function nodes(Request $request)
+    public function nodes(Request $request): JsonResponse
     {
         try {
             $sesiId = $request->query('sesi_id');

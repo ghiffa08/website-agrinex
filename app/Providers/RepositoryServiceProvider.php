@@ -40,6 +40,14 @@ class RepositoryServiceProvider extends ServiceProvider
             \App\Repositories\Contracts\DashboardRepositoryInterface::class,
             \App\Repositories\Eloquent\EloquentDashboardRepository::class
         );
+        $this->app->bind(
+            \App\Repositories\Contracts\UserRepositoryInterface::class,
+            \App\Repositories\Eloquent\EloquentUserRepository::class
+        );
+        $this->app->bind(
+            \App\Repositories\Contracts\MonitorRepositoryInterface::class,
+            \App\Repositories\Eloquent\EloquentMonitorRepository::class
+        );
     }
 
     /**
