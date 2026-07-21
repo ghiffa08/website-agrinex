@@ -31,14 +31,16 @@
     {{-- Navigation Menu --}}
     <nav class="flex-1 flex flex-col items-center gap-4 px-2 overflow-y-auto">
         
+        @php
+            $isDashboard = request()->routeIs('agrinex.dashboard');
+            $isDevices = request()->routeIs('agrinex.devices') || request()->routeIs('agrinex.node-detail');
+            $isReports = request()->routeIs('reports.*');
+        @endphp
+
         {{-- Dashboard --}}
         <a href="{{ route('agrinex.dashboard') }}"
-            :class="currentHash === '' ? 'bg-neuBg shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand' : 'text-lightText hover:text-brand'"
-            class="w-12 h-12 md:w-14 md:h-14 rounded-2xl
-                shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff]
-                hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]
-                flex items-center justify-center
-                transition-all duration-300 active:scale-95 group"
+            class="w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center transition-all duration-300 active:scale-95 group
+                {{ $isDashboard ? 'bg-neuBg shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand' : 'text-lightText hover:text-brand shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]' }}"
             title="Dashboard">
             <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -51,12 +53,8 @@
 
         {{-- Devices --}}
         <a href="{{ route('agrinex.devices') }}"
-            :class="'{{ request()->routeIs('agrinex.devices') || request()->routeIs('agrinex.node-detail') ? 'active' : '' }}' === 'active' ? 'bg-neuBg shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand' : 'text-lightText hover:text-brand'"
-            class="w-12 h-12 md:w-14 md:h-14 rounded-2xl
-                shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff]
-                hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]
-                flex items-center justify-center
-                transition-all duration-300 active:scale-95"
+            class="w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center transition-all duration-300 active:scale-95
+                {{ $isDevices ? 'bg-neuBg shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand' : 'text-lightText hover:text-brand shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]' }}"
             title="Perangkat">
             <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
@@ -65,12 +63,8 @@
 
         {{-- Weather --}}
         <a href="#"
-            class="w-12 h-12 md:w-14 md:h-14 rounded-2xl
-                text-lightText hover:text-brand
-                shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff]
-                hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]
-                flex items-center justify-center
-                transition-all duration-300 active:scale-95"
+            class="w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center transition-all duration-300 active:scale-95
+                text-lightText hover:text-brand shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]"
             title="Cuaca">
             <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -80,12 +74,8 @@
 
         {{-- Reports --}}
         <a href="{{ route('reports.index') }}"
-            :class="'{{ request()->routeIs('reports.index') ? 'active' : '' }}' === 'active' ? 'bg-neuBg shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand' : 'text-lightText hover:text-brand'"
-            class="w-12 h-12 md:w-14 md:h-14 rounded-2xl
-                shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff]
-                hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]
-                flex items-center justify-center
-                transition-all duration-300 active:scale-95"
+            class="w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center transition-all duration-300 active:scale-95
+                {{ $isReports ? 'bg-neuBg shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand' : 'text-lightText hover:text-brand shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]' }}"
             title="Laporan">
             <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -101,12 +91,8 @@
         {{-- Home Button --}}
         <div class="flex items-center justify-center">
             <a href="{{ route('agrinex.dashboard') }}"
-                :class="currentHash === '' ? 'text-brand shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]' : 'text-lightText hover:text-brand'"
-                class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-neuBg
-                    shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff]
-                    hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]
-                    transition-all duration-300
-                    flex items-center justify-center active:scale-95"
+                class="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-300 active:scale-95
+                    {{ $isDashboard ? 'bg-neuBg shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] text-brand' : 'bg-neuBg text-lightText hover:text-brand shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]' }}"
                 title="Beranda">
                 <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a2 2 0 002 2h10a2 2 0 002-2V10M9 21h6"/>
@@ -117,10 +103,8 @@
         {{-- Profile Button --}}
         <div class="flex items-center justify-center">
             <a href="/#profile"
-                :class="currentHash === '#profile' ? 'text-brand shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]' : 'text-lightText hover:text-brand'"
+                :class="currentHash === '#profile' ? 'text-brand shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]' : 'text-lightText hover:text-brand shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff] hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]'"
                 class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-neuBg
-                    shadow-[4px_4px_8px_#a3b1c6,-4px_-4px_8px_#ffffff]
-                    hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]
                     transition-all duration-300
                     flex items-center justify-center active:scale-95 overflow-hidden"
                 title="Profil Saya">
@@ -142,3 +126,4 @@
      @click="sidebarOpen = false"
      x-transition.opacity
      class="fixed inset-0 z-40 bg-black/30 md:hidden"></div>
+
