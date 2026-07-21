@@ -1,0 +1,26 @@
+{
+  "name": "agrinex_node_tester",
+  "version": "v1.0.0",
+  "home_assistant_domain": "esphome",
+  "funding_url": "https://agrinex.io",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32-S3",
+      "parts": [
+        {
+          "path": "/flasher-firmware/tester/firmware.bin",
+          "offset": 65536
+        },
+        {
+          "path": "/flasher-firmware/tester/bootloader.bin",
+          "offset": 4096
+        },
+        {
+          "path": "/flasher-firmware/tester/partitions.bin",
+          "offset": 32768
+        }
+      ]
+    }
+  ]
+}

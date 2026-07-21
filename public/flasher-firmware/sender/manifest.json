@@ -1,0 +1,26 @@
+{
+  "name": "NODE01-Sender",
+  "version": "v2.1.0",
+  "home_assistant_domain": "esphome",
+  "funding_url": "https://agrinex.io",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32-S3",
+      "parts": [
+        {
+          "path": "/flasher-firmware/sender/firmware.bin",
+          "offset": 65536
+        },
+        {
+          "path": "/flasher-firmware/sender/bootloader.bin",
+          "offset": 4096
+        },
+        {
+          "path": "/flasher-firmware/sender/partitions.bin",
+          "offset": 32768
+        }
+      ]
+    }
+  ]
+}

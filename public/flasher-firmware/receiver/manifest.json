@@ -1,0 +1,26 @@
+{
+  "name": "NODE02-Receiver",
+  "version": "v2.1.0",
+  "home_assistant_domain": "esphome",
+  "funding_url": "https://agrinex.io",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32-S3",
+      "parts": [
+        {
+          "path": "/flasher-firmware/receiver/firmware.bin",
+          "offset": 65536
+        },
+        {
+          "path": "/flasher-firmware/receiver/bootloader.bin",
+          "offset": 4096
+        },
+        {
+          "path": "/flasher-firmware/receiver/partitions.bin",
+          "offset": 32768
+        }
+      ]
+    }
+  ]
+}

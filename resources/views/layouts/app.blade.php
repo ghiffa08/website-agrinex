@@ -494,6 +494,14 @@
                 <span>Weather Data</span>
             </a> --}}
 
+            <div class="menu-section-title">Development Tools</div>
+
+            <a href="{{ route('flasher.index') }}"
+                class="menu-item {{ request()->routeIs('flasher.*') ? 'active' : '' }}">
+                <i class="bi bi-lightning-charge-fill"></i>
+                <span>ESP32 Web Flasher</span>
+            </a>
+
             <a href="{{ route('reports.index') }}"
                 class="menu-item {{ request()->routeIs('reports.*') ? 'active' : '' }}">
                 <i class="bi bi-file-earmark-bar-graph"></i>
