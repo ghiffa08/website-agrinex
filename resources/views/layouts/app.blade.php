@@ -422,23 +422,29 @@
 
             <div class="menu-section-title">Data Management</div>
 
+            {{-- Sensor Node Data menu disabled - route not defined
             <a href="{{ route('admin.sensor-node-data.index') }}"
                 class="menu-item {{ request()->routeIs('admin.sensor-node-data.*') ? 'active' : '' }}">
                 <i class="bi bi-thermometer-half"></i>
                 <span>Sensor Node Data</span>
             </a>
+            --}}
 
+            {{-- Weather Data menu disabled - route not defined
             <a href="{{ route('admin.weather-data.index') }}"
                 class="menu-item {{ request()->routeIs('admin.weather-data.*') ? 'active' : '' }}">
                 <i class="bi bi-cloud-sun"></i>
                 <span>Weather Data</span>
             </a>
+            --}}
 
+            {{-- Getdata Logs menu disabled - route not defined
             <a href="{{ route('admin.getdata-logs.index') }}"
                 class="menu-item {{ request()->routeIs('admin.getdata-logs.*') ? 'active' : '' }}">
                 <i class="bi bi-file-earmark-text"></i>
                 <span>Getdata Logs</span>
             </a>
+            --}}
 
             <a href="{{ route('admin.irrigate-logs.index') }}"
                 class="menu-item {{ request()->routeIs('admin.irrigate-logs.*') ? 'active' : '' }}">
