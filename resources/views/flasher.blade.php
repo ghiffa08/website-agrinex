@@ -271,6 +271,11 @@
     </div>
 
     <script type="module">
+        // Import buffer polyfill for browser
+        import { Buffer } from 'https://cdn.jsdelivr.net/npm/buffer@6.0.3/+esm';
+        window.Buffer = Buffer;
+        
+        // Import ESPTool.js
         import { ESPLoader, Transport } from 'https://unpkg.com/esptool-js@0.4.4/bundle.js';
         window.esptooljs = { ESPLoader, Transport };
     </script>
