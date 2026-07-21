@@ -415,7 +415,7 @@
 
         <div class="sidebar-menu">
             <a href="{{ route('dashboard') }}"
-                class="menu-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                class="menu-item {{ request()->routeIs('dashboard') && !request()->routeIs('dashboard.*') ? 'active' : '' }}">
                 <i class="bi bi-speedometer2"></i>
                 <span>Dashboard</span>
             </a>
