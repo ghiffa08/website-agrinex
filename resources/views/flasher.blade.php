@@ -165,8 +165,23 @@
                                     </div>
                                 </div>
 
-                                {{-- Flash Button --}}
-                                <div class="flex justify-center pt-4">
+                                {{-- Connect & Flash Buttons --}}
+                                <div class="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+                                    {{-- Connect/Disconnect Button --}}
+                                    <button @click="port ? disconnectPort() : connectPort()" 
+                                        :disabled="isFlashing || isConnecting || !isWebSerialSupported"
+                                        class="px-6 py-4 rounded-2xl font-bold transition-all duration-300"
+                                        :class="isFlashing || isConnecting || !isWebSerialSupported
+                                            ? 'bg-gray-400 text-white cursor-not-allowed shadow-[4px_4px_8px_#8a96a8,-4px_-4px_8px_#d4dce6]'
+                                            : port
+                                                ? 'bg-red-500 text-white hover:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.2)] shadow-[6px_6px_12px_#a3b1c6,-6px_-6px_12px_#ffffff]'
+                                                : 'bg-blue-500 text-white hover:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.2)] shadow-[6px_6px_12px_#a3b1c6,-6px_-6px_12px_#ffffff]'">
+                                        <span x-show="!port && !isConnecting">🔌 Connect ESP32</span>
+                                        <span x-show="isConnecting" x-cloak>🔄 Connecting...</span>
+                                        <span x-show="port && !isConnecting" x-cloak>❌ Disconnect</span>
+                                    </button>
+
+                                    {{-- Flash Button --}}
                                     <button @click="startFlash" :disabled="!selectedFirmware || isFlashing || !isWebSerialSupported"
                                         class="px-8 py-4 rounded-2xl font-bold text-white transition-all duration-300"
                                         :class="!selectedFirmware || isFlashing || !isWebSerialSupported 
@@ -191,10 +206,24 @@
                                                 <span class="text-sm font-bold text-darkText" x-text="selectedFirmware || '-'"></span>
                                             </div>
                                             <div class="flex items-center justify-between">
-                                                <span class="text-sm text-lightText">Port:</span>
-                                                <span class="text-sm font-bold text-darkText" x-text="port ? 'Connected' : 'Not Connected'"></span>
+                                                <span class="text-sm text-lightText">Connection:</span>
+                                                <span class="text-xs font-bold px-2 py-1 rounded-lg"
+                                                    :class="port ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'"
+                                                    x-text="port ? '✓ Connected' : '○ Disconnected'"></span>
                                             </div>
-                                            <div class="flex items-center justify-between">
+                                            <template x-if="chipInfo">
+                                                <div class="pt-2 border-t border-[#a3b1c6]/30">
+                                                    <div class="flex items-center justify-between mb-2">
+                                                        <span class="text-sm text-lightText">Chip:</span>
+                                                        <span class="text-sm font-bold text-darkText" x-text="chipInfo.type"></span>
+                                                    </div>
+                                                    <div class="flex items-center justify-between">
+                                                        <span class="text-sm text-lightText">MAC:</span>
+                                                        <span class="text-xs font-mono text-darkText" x-text="chipInfo.macAddress"></span>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                            <div class="flex items-center justify-between pt-2 border-t border-[#a3b1c6]/30">
                                                 <span class="text-sm text-lightText">Progress:</span>
                                                 <span class="text-sm font-bold text-brand" x-text="progress + '%'"></span>
                                             </div>
@@ -250,16 +279,18 @@
             wifiSSID: '',
             wifiPassword: '',
             isFlashing: false,
+            isConnecting: false,
             progress: 0,
             statusMessage: 'Pilih firmware untuk memulai',
             consoleLog: [],
             port: null,
             esploader: null,
+            chipInfo: null,
 
             selectFirmware(type) {
                 if (!this.isFlashing) {
                     this.selectedFirmware = type;
-                    this.statusMessage = `Firmware ${type} dipilih. Klik "Flash Firmware" untuk memulai.`;
+                    this.statusMessage = `Firmware ${type} dipilih. ${this.port ? 'Klik "Flash Firmware"' : 'Connect ke ESP32 terlebih dahulu'}.`;
                     this.addLog(`Selected firmware: ${type}`);
                 }
             },
@@ -275,21 +306,106 @@
                 this.consoleLog = [];
             },
 
+            async connectPort() {
+                if (this.isConnecting || this.isFlashing) return;
+
+                try {
+                    this.isConnecting = true;
+                    this.statusMessage = 'Membuka port serial...';
+                    this.addLog('=== PORT CONNECTION ===');
+                    this.addLog('Requesting serial port...');
+
+                    // Request serial port with ESP32 filters
+                    this.port = await navigator.serial.requestPort({
+                        filters: [
+                            { usbVendorId: 0x303a }, // Espressif
+                            { usbVendorId: 0x10c4 }, // Silicon Labs (CP210x)
+                            { usbVendorId: 0x1a86 }, // QinHeng (CH340)
+                        ]
+                    });
+
+                    await this.port.open({ baudRate: 115200 });
+                    this.addLog('Serial port opened at 115200 baud');
+
+                    // Initialize ESPLoader for detection
+                    const espLoaderTerminal = {
+                        clean: () => {},
+                        writeLine: (data) => this.addLog(data),
+                        write: (data) => this.addLog(data)
+                    };
+
+                    this.esploader = new esptooljs.ESPLoader({
+                        transport: new esptooljs.Transport(this.port),
+                        baudrate: 115200,
+                        terminal: espLoaderTerminal
+                    });
+
+                    this.statusMessage = 'Mendeteksi chip ESP32...';
+                    this.addLog('Detecting chip...');
+                    
+                    await this.esploader.main();
+                    
+                    this.chipInfo = {
+                        type: this.esploader.chipName || 'ESP32',
+                        macAddress: this.esploader.macAddr ? this.esploader.macAddr() : 'Unknown'
+                    };
+
+                    this.addLog(`✓ Chip detected: ${this.chipInfo.type}`);
+                    this.addLog(`✓ MAC Address: ${this.chipInfo.macAddress}`);
+                    this.statusMessage = `✓ Connected: ${this.chipInfo.type}`;
+
+                    alert(`✓ ESP32 terdeteksi!\nChip: ${this.chipInfo.type}\nMAC: ${this.chipInfo.macAddress}`);
+
+                } catch (error) {
+                    console.error('Connection error:', error);
+                    this.addLog(`ERROR: ${error.message}`);
+                    this.statusMessage = '✗ Connection failed';
+                    alert('Gagal connect: ' + error.message);
+
+                    if (this.port) {
+                        try {
+                            await this.port.close();
+                        } catch (e) {}
+                        this.port = null;
+                    }
+                    this.esploader = null;
+                    this.chipInfo = null;
+                } finally {
+                    this.isConnecting = false;
+                }
+            },
+
+            async disconnectPort() {
+                if (this.port) {
+                    try {
+                        await this.port.close();
+                        this.addLog('Port closed');
+                    } catch (e) {
+                        this.addLog(`Error closing port: ${e.message}`);
+                    }
+                    this.port = null;
+                    this.esploader = null;
+                    this.chipInfo = null;
+                    this.statusMessage = 'Disconnected';
+                }
+            },
+
             async startFlash() {
                 if (!this.selectedFirmware || this.isFlashing || !this.isWebSerialSupported) return;
+
+                // Auto-connect if not connected
+                if (!this.port) {
+                    await this.connectPort();
+                    if (!this.port) {
+                        return; // Connection failed
+                    }
+                }
 
                 try {
                     this.isFlashing = true;
                     this.progress = 0;
-                    this.statusMessage = 'Menghubungkan ke ESP32...';
+                    this.statusMessage = 'Mempersiapkan flash...';
                     this.addLog('=== FLASH STARTED ===');
-                    this.addLog('Requesting serial port...');
-
-                    // Request serial port
-                    this.port = await navigator.serial.requestPort();
-                    await this.port.open({ baudRate: 115200 });
-
-                    this.addLog('Serial port opened');
                     this.statusMessage = 'Mengunduh firmware...';
 
                     // Load firmware files
