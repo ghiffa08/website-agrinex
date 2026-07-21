@@ -7,7 +7,7 @@
     <title>ESP32 Web Flasher - AgriNex</title>
 </head>
 
-<body x-data="flasherApp()"
+<body x-data="{ sidebarOpen: false, ...flasherApp() }"
     class="h-full min-h-screen w-full bg-neuBg text-darkText font-sans antialiased selection:bg-brand selection:text-white relative overflow-x-hidden">
 
     <div class="min-h-screen w-full bg-neuBg font-sans text-darkText">
@@ -270,7 +270,10 @@
         </div>
     </div>
 
-    <script src="https://unpkg.com/esptool-js@0.4.4/bundle.js"></script>
+    <script type="module">
+        import { ESPLoader, Transport } from 'https://unpkg.com/esptool-js@0.4.4/bundle.js';
+        window.esptooljs = { ESPLoader, Transport };
+    </script>
     <script>
     function flasherApp() {
         return {
