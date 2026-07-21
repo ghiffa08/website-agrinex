@@ -341,8 +341,7 @@
                         ]
                     });
 
-                    await this.port.open({ baudRate: 115200 });
-                    this.addLog('Serial port opened at 115200 baud');
+                    this.addLog('Port selected, initializing transport...');
 
                     const espLoaderTerminal = {
                         clean: () => {},
@@ -350,6 +349,7 @@
                         write: (data) => this.addLog(data)
                     };
 
+                    // Let Transport handle port.open() internally
                     this.transport = new esptooljs.Transport(this.port);
                     this.esploader = new esptooljs.ESPLoader({
                         transport: this.transport,
@@ -361,6 +361,7 @@
                     this.addLog('Detecting chip...');
                     
                     await this.esploader.main();
+                    this.addLog('Serial port opened at 115200 baud');
                     
                     this.chipInfo = {
                         type: this.esploader.chipName || 'ESP32',
