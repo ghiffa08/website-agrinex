@@ -287,6 +287,7 @@
             statusMessage: 'Pilih firmware untuk memulai',
             consoleLog: [],
             port: null,
+            transport: null,
             esploader: null,
             chipInfo: null,
 
@@ -309,8 +310,21 @@
                 this.consoleLog = [];
             },
 
+            async _cleanupPort() {
+                if (this.transport) {
+                    try { await this.transport.disconnect(); } catch (e) {}
+                    this.transport = null;
+                }
+                if (this.port) {
+                    try { await this.port.close(); } catch (e) {}
+                    this.port = null;
+                }
+                this.esploader = null;
+                this.chipInfo = null;
+            },
+
             async connectPort() {
-                if (this.isConnecting || this.isFlashing) return;
+                if (this.port || this.isConnecting || this.isFlashing) return;
 
                 try {
                     this.isConnecting = true;
@@ -318,27 +332,27 @@
                     this.addLog('=== PORT CONNECTION ===');
                     this.addLog('Requesting serial port...');
 
-                    // Request serial port with ESP32 filters
                     this.port = await navigator.serial.requestPort({
                         filters: [
-                            { usbVendorId: 0x303a }, // Espressif
-                            { usbVendorId: 0x10c4 }, // Silicon Labs (CP210x)
-                            { usbVendorId: 0x1a86 }, // QinHeng (CH340)
+                            { usbVendorId: 0x303a },
+                            { usbVendorId: 0x10c4 },
+                            { usbVendorId: 0x1a86 },
+                            { usbVendorId: 0x2886 },
                         ]
                     });
 
                     await this.port.open({ baudRate: 115200 });
                     this.addLog('Serial port opened at 115200 baud');
 
-                    // Initialize ESPLoader for detection
                     const espLoaderTerminal = {
                         clean: () => {},
                         writeLine: (data) => this.addLog(data),
                         write: (data) => this.addLog(data)
                     };
 
+                    this.transport = new esptooljs.Transport(this.port);
                     this.esploader = new esptooljs.ESPLoader({
-                        transport: new esptooljs.Transport(this.port),
+                        transport: this.transport,
                         baudrate: 115200,
                         terminal: espLoaderTerminal
                     });
@@ -360,48 +374,34 @@
                     alert(`✓ ESP32 terdeteksi!\nChip: ${this.chipInfo.type}\nMAC: ${this.chipInfo.macAddress}`);
 
                 } catch (error) {
+                    if (error.name === 'NotFoundError') {
+                        this.addLog('Port selection cancelled by user');
+                        this.statusMessage = 'Pilih firmware untuk memulai';
+                        await this._cleanupPort();
+                        return;
+                    }
                     console.error('Connection error:', error);
                     this.addLog(`ERROR: ${error.message}`);
                     this.statusMessage = '✗ Connection failed';
                     alert('Gagal connect: ' + error.message);
-
-                    if (this.port) {
-                        try {
-                            await this.port.close();
-                        } catch (e) {}
-                        this.port = null;
-                    }
-                    this.esploader = null;
-                    this.chipInfo = null;
+                    await this._cleanupPort();
                 } finally {
                     this.isConnecting = false;
                 }
             },
 
             async disconnectPort() {
-                if (this.port) {
-                    try {
-                        await this.port.close();
-                        this.addLog('Port closed');
-                    } catch (e) {
-                        this.addLog(`Error closing port: ${e.message}`);
-                    }
-                    this.port = null;
-                    this.esploader = null;
-                    this.chipInfo = null;
-                    this.statusMessage = 'Disconnected';
-                }
+                await this._cleanupPort();
+                this.statusMessage = 'Disconnected';
+                this.addLog('Port disconnected');
             },
 
             async startFlash() {
                 if (!this.selectedFirmware || this.isFlashing || !this.isWebSerialSupported) return;
 
-                // Auto-connect if not connected
                 if (!this.port) {
                     await this.connectPort();
-                    if (!this.port) {
-                        return; // Connection failed
-                    }
+                    if (!this.port) return;
                 }
 
                 try {
@@ -409,47 +409,42 @@
                     this.progress = 0;
                     this.statusMessage = 'Mempersiapkan flash...';
                     this.addLog('=== FLASH STARTED ===');
-                    this.statusMessage = 'Mengunduh firmware...';
 
-                    // Load firmware files
                     const manifestUrl = `/flasher-firmware/${this.selectedFirmware}/manifest.json`;
                     const response = await fetch(manifestUrl);
+                    if (!response.ok) throw new Error(`Manifest tidak ditemukan: ${manifestUrl}`);
                     const manifest = await response.json();
 
                     this.addLog(`Firmware: ${manifest.name} v${manifest.version}`);
-                    this.addLog(`Chip: ${manifest.chipFamily}`);
+                    this.addLog(`Chip Family: ${manifest.chipFamily}`);
+                    this.statusMessage = 'Mengunduh firmware...';
 
-                    // Download all parts
-                    this.statusMessage = 'Mempersiapkan flashing...';
                     const fileArray = await Promise.all(
                         manifest.parts.map(async (part) => {
                             const url = `/flasher-firmware/${this.selectedFirmware}/${part.path}`;
-                            const blob = await fetch(url).then(r => r.blob());
-                            return {
-                                data: await blob.arrayBuffer(),
-                                address: part.offset
-                            };
+                            this.addLog(`Downloading: ${part.path}`);
+                            const resp = await fetch(url);
+                            if (!resp.ok) throw new Error(`Gagal download: ${url}`);
+                            return { data: await resp.arrayBuffer(), address: part.offset };
                         })
                     );
 
-                    // Initialize ESPLoader
-                    const espLoaderTerminal = {
-                        clean: () => {},
-                        writeLine: (data) => this.addLog(data),
-                        write: (data) => this.addLog(data)
-                    };
+                    if (!this.esploader) {
+                        const espLoaderTerminal = {
+                            clean: () => {},
+                            writeLine: (data) => this.addLog(data),
+                            write: (data) => this.addLog(data)
+                        };
+                        this.transport = new esptooljs.Transport(this.port);
+                        this.esploader = new esptooljs.ESPLoader({
+                            transport: this.transport,
+                            baudrate: 115200,
+                            terminal: espLoaderTerminal
+                        });
+                        this.statusMessage = 'Connecting to ESP32...';
+                        await this.esploader.main();
+                    }
 
-                    this.esploader = new esptooljs.ESPLoader({
-                        transport: new esptooljs.Transport(this.port),
-                        baudrate: 115200,
-                        terminal: espLoaderTerminal
-                    });
-
-                    // Connect
-                    this.statusMessage = 'Connecting to ESP32...';
-                    await this.esploader.main();
-
-                    // Flash
                     this.statusMessage = 'Flashing firmware...';
                     this.addLog('Starting flash process...');
 
@@ -469,12 +464,8 @@
                     this.addLog('=== FLASH COMPLETE ===');
                     this.addLog('Rebooting ESP32...');
 
-                    // Hard reset
                     await this.esploader.hardReset();
-
-                    // Close port
-                    await this.port.close();
-                    this.port = null;
+                    await this._cleanupPort();
 
                     alert('✓ Firmware berhasil di-flash! ESP32 akan reboot otomatis.');
 
@@ -483,13 +474,7 @@
                     this.addLog(`ERROR: ${error.message}`);
                     this.statusMessage = '✗ Flash gagal: ' + error.message;
                     alert('Flash gagal: ' + error.message);
-
-                    if (this.port) {
-                        try {
-                            await this.port.close();
-                        } catch (e) {}
-                        this.port = null;
-                    }
+                    await this._cleanupPort();
                 } finally {
                     this.isFlashing = false;
                 }
