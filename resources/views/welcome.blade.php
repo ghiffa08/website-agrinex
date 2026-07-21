@@ -205,7 +205,7 @@
                         </div>
                     @else
                         {{-- Local Account or OAuth with local password --}}
-                        <form id="password-form" action="{{ route('profile.password') }}" method="POST" class="space-y-6">
+                        <form id="password-form" action="{{ route('profile.update-password') }}" method="POST" class="space-y-6">
                             @csrf
                             <div class="space-y-4">
                                 <div class="space-y-2">
