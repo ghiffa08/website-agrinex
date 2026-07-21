@@ -125,13 +125,14 @@
             transition: all 0.3s;
         }
 
-        .menu-item:hover,
         .menu-item.active {
-            background: linear-gradient(90deg, #bbf7d0 0%, #22c55e 100%);
+            background: linear-gradient(90deg, #ffffff 0%, #dcfce7 100%);
             color: #166534;
             font-weight: 700;
-            box-shadow: 0 2px 8px rgba(34,197,94,0.08);
+            box-shadow: 0 4px 12px rgba(34,197,94,0.2);
+            transform: translateX(2px);
         }
+        
         .menu-item:hover {
             background-color: rgba(255,255,255,0.13);
             color: #fff;
@@ -400,7 +401,7 @@
     @stack('styles')
 </head>
 
-<body>
+<body x-data="adminApp()">
     {{-- Global Splash Screen --}}
     @include('components.splash')
     
@@ -562,10 +563,29 @@
         </div>
     </div>
 
+    <!-- Alpine.js for reactive components -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+        // Global Alpine.js data for admin pages
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('adminApp', () => ({
+                showToast: false,
+                toastMessage: '',
+                toastType: 'info',
+                
+                displayToast(message, type = 'info') {
+                    this.toastMessage = message;
+                    this.toastType = type;
+                    this.showToast = true;
+                    setTimeout(() => { this.showToast = false; }, 5000);
+                }
+            }));
+        });
+
         // Sidebar Toggle for Mobile
         document.getElementById('sidebarToggle')?.addEventListener('click', function() {
             document.getElementById('sidebar').classList.toggle('show');
