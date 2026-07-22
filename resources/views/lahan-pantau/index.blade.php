@@ -49,9 +49,11 @@
                 </main>
             </div>
         </div>
+        
+        {{-- Modal harus di dalam scope x-data --}}
+        @include('lahan-pantau.partials.modal')
     </div>
 
-    @include('lahan-pantau.partials.modal')
     @include('lahan-pantau.partials.script')
 
 </body>
