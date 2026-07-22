@@ -1,0 +1,132 @@
+LAHAN PANTAU - QUICK START GUIDE
+=================================
+
+AKSES FITUR
+-----------
+Web:  http://localhost/lahan-pantau
+      https://smartdrip-system.agrinex.io/lahan-pantau (production)
+
+API:  /api/v1/lahan-pantau
+
+
+FITUR YANG TERSEDIA
+-------------------
+✅ Lihat daftar semua lahan (grid view)
+✅ Tambah lahan baru (modal form)
+✅ Edit lahan (modal form)
+✅ Hapus lahan (dengan konfirmasi)
+✅ Device count per lahan
+✅ Image preview (optional)
+✅ Loading skeleton
+✅ Empty state
+✅ Responsive design
+
+
+CARA MENGGUNAKAN
+----------------
+
+1. TAMBAH LAHAN BARU
+   - Klik tombol "+ Tambah Lahan" di kanan atas
+   - Isi form:
+     * Nama Lahan (required)
+     * Lokasi (optional)
+     * Deskripsi (optional)
+     * URL Gambar (optional)
+   - Klik "Tambah Lahan"
+
+2. EDIT LAHAN
+   - Klik icon pensil (edit) di card lahan
+   - Update data yang diperlukan
+   - Klik "Simpan Perubahan"
+
+3. HAPUS LAHAN
+   - Klik icon trash (delete) di card lahan
+   - Konfirmasi penghapusan
+   - Device yang terhubung akan di-unassign otomatis
+
+4. VIEW DETAIL
+   - Klik card lahan untuk masuk ke halaman detail
+   - (Halaman detail belum dibuat, route sudah ready)
+
+
+API DOCUMENTATION
+-----------------
+
+1. GET /api/v1/lahan-pantau
+   Response: List semua lahan dengan total devices
+
+2. POST /api/v1/lahan-pantau
+   Body: {
+     "nama_lahan": "string (required)",
+     "lokasi": "string (optional)",
+     "deskripsi": "string (optional)",
+     "image_url": "url (optional)"
+   }
+
+3. GET /api/v1/lahan-pantau/{id}
+   Response: Detail lahan dengan list devices
+
+4. PUT /api/v1/lahan-pantau/{id}
+   Body: sama dengan POST (semua field optional)
+
+5. DELETE /api/v1/lahan-pantau/{id}
+   Response: success message
+
+
+STRUKTUR FILE
+-------------
+app/Http/Controllers/
+  ├── Api/LahanPantauController.php
+  └── Web/LahanPantauController.php
+
+app/Repositories/
+  ├── Contracts/LahanPantauRepositoryInterface.php
+  └── LahanPantauRepository.php
+
+resources/views/lahan-pantau/
+  ├── index.blade.php
+  └── partials/
+      ├── list.blade.php
+      ├── modal.blade.php
+      └── script.blade.php
+
+
+DATABASE
+--------
+Table: lahan_pantaus
+- id (bigint)
+- nama_lahan (varchar 100)
+- lokasi (varchar 255, nullable)
+- deskripsi (text, nullable)
+- image_url (varchar 255, nullable)
+- created_at, updated_at
+
+Relasi:
+- LahanPantau hasMany Device (via lahan_pantau_id)
+
+
+TEST DATA
+---------
+3 lahan sudah dibuat:
+1. Lahan Blok A - Desa Sumberjo, Kec. Batu
+2. Lahan Blok B - Desa Sumberjo, Kec. Batu
+3. Lahan Blok C - Desa Pandesari, Kec. Pujon
+
+
+DEPLOYMENT
+----------
+1. git push origin main
+2. ./deploy.sh
+3. Test production: https://smartdrip-system.agrinex.io/lahan-pantau
+
+
+ENHANCEMENT IDEAS (FUTURE)
+--------------------------
+□ Halaman detail lahan dengan map
+□ Device assignment interface (drag & drop)
+□ Upload image lahan (storage)
+□ Statistics per lahan
+□ Filter & search lahan
+□ Export data ke PDF/Excel
+□ Bulk operations
+□ Lahan grouping/kategori
