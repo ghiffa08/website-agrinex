@@ -23,15 +23,23 @@ function lahanPantauPage() {
             try {
                 const response = await fetch('/api/v1/lahan-pantau', {
                     headers: {
-                        'Authorization': 'Bearer ' + (localStorage.getItem('auth_token') || ''),
-                        'Accept': 'application/json'
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
                     }
                 });
                 
-                if (!response.ok) throw new Error('Failed to fetch');
+                console.log('Fetch response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Fetch error:', errorText);
+                    throw new Error('Failed to fetch');
+                }
                 
                 const data = await response.json();
+                console.log('Fetched data:', data);
                 this.lahans = data.data || [];
+                console.log('Lahans array:', this.lahans);
             } catch (error) {
                 console.error('Error fetching lahans:', error);
                 this.showNotification('Gagal memuat data lahan', 'error');
@@ -73,6 +81,12 @@ function lahanPantauPage() {
         async submitForm() {
             if (this.submitting) return;
             
+            // Validate required field
+            if (!this.formData.nama_lahan || this.formData.nama_lahan.trim() === '') {
+                this.showNotification('Nama lahan harus diisi', 'error');
+                return;
+            }
+            
             this.submitting = true;
             
             try {
@@ -82,18 +96,22 @@ function lahanPantauPage() {
                 
                 const method = this.editMode ? 'PUT' : 'POST';
                 
+                console.log('Submitting:', method, url, this.formData);
+                
                 const response = await fetch(url, {
                     method: method,
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + (localStorage.getItem('auth_token') || ''),
                         'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
                     },
                     body: JSON.stringify(this.formData)
                 });
 
+                console.log('Submit response status:', response.status);
                 const data = await response.json();
+                console.log('Submit response data:', data);
 
                 if (response.ok && data.success) {
                     this.showNotification(
@@ -107,7 +125,7 @@ function lahanPantauPage() {
                 }
             } catch (error) {
                 console.error('Error saving lahan:', error);
-                this.showNotification('Gagal menyimpan data', 'error');
+                this.showNotification('Gagal menyimpan data: ' + error.message, 'error');
             } finally {
                 this.submitting = false;
             }
@@ -122,8 +140,8 @@ function lahanPantauPage() {
                 const response = await fetch(`/api/v1/lahan-pantau/${id}`, {
                     method: 'DELETE',
                     headers: {
-                        'Authorization': 'Bearer ' + (localStorage.getItem('auth_token') || ''),
                         'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
                     }
                 });
@@ -138,7 +156,7 @@ function lahanPantauPage() {
                 }
             } catch (error) {
                 console.error('Error deleting lahan:', error);
-                this.showNotification('Gagal menghapus lahan', 'error');
+                this.showNotification('Gagal menghapus lahan: ' + error.message, 'error');
             }
         },
 
