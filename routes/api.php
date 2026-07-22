@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\DashboardPollingController;
 use App\Http\Controllers\Api\DeviceDetailController;
 use App\Http\Controllers\Api\MobileApiController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\LahanPantauController;
 
 /*
 |--------------------------------------------------------------------------
@@ -94,6 +95,15 @@ Route::prefix('v1')->group(function () {
         Route::get('/preview', [\App\Http\Controllers\Api\ReportApiController::class, 'preview']);
         Route::get('/data', [\App\Http\Controllers\Api\ReportApiController::class, 'getData']);
         Route::get('/types', [\App\Http\Controllers\Api\ReportApiController::class, 'getTypes']);
+    });
+    
+    // Lahan Pantau API (without auth for now - will add after testing)
+    Route::prefix('lahan-pantau')->group(function () {
+        Route::get('/', [LahanPantauController::class, 'index']);
+        Route::post('/', [LahanPantauController::class, 'store']);
+        Route::get('/{id}', [LahanPantauController::class, 'show']);
+        Route::put('/{id}', [LahanPantauController::class, 'update']);
+        Route::delete('/{id}', [LahanPantauController::class, 'destroy']);
     });
     
     // Monitor Endpoints

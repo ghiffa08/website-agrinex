@@ -15,6 +15,7 @@ use App\Http\Controllers\Web\WeatherController;
 use App\Http\Controllers\Web\ReportsController;
 use App\Http\Controllers\Web\ReportController;
 use App\Http\Controllers\Web\ProfileController;
+use App\Http\Controllers\Web\LahanPantauController;
 
 /*
 |--------------------------------------------------------------------------
@@ -70,6 +71,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/devices', [ReportController::class, 'getDevices'])->name('reports.devices');
     Route::get('/reports/generate/{reportType}', [ReportController::class, 'generate'])->name('reports.generate');
+    
+    // Lahan Pantau Routes
+    Route::get('/lahan-pantau', [LahanPantauController::class, 'index'])->name('lahan-pantau.index');
+    Route::get('/lahan-pantau/{id}', [LahanPantauController::class, 'show'])->name('lahan-pantau.show');
 
     // Profile Routes
     Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');

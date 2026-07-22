@@ -25,6 +25,11 @@ class AppServiceProvider extends ServiceProvider
             \App\Repositories\Contracts\ReportRepositoryInterface::class,
             \App\Repositories\Eloquent\EloquentReportRepository::class
         );
+        
+        $this->app->bind(
+            \App\Repositories\Contracts\LahanPantauRepositoryInterface::class,
+            \App\Repositories\LahanPantauRepository::class
+        );
     }
 
     /**
