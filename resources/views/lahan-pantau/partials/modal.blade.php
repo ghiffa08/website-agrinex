@@ -1,16 +1,15 @@
 {{-- Modal Create/Edit Lahan --}}
 <div x-show="showModal" 
     x-cloak
-    class="fixed inset-0 z-50 overflow-y-auto">
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0">
     
-    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        {{-- Background overlay --}}
-        <div class="fixed inset-0 bg-black bg-opacity-50" 
-            @click="closeModal"></div>
+    {{-- Background overlay --}}
+    <div class="fixed inset-0 bg-black/50 transition-opacity" 
+        @click="closeModal"></div>
 
-        {{-- Modal panel --}}
-        <div class="inline-block align-bottom bg-neuBg rounded-[2rem] text-left overflow-hidden shadow-[8px_8px_16px_#a3b1c6,-8px_-8px_16px_#ffffff] transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
-            @click.stop>
+    {{-- Modal panel --}}
+    <div class="relative z-10 w-full max-w-lg bg-neuBg rounded-[2rem] text-left overflow-hidden shadow-[8px_8px_16px_#a3b1c6,-8px_-8px_16px_#ffffff] transform transition-all"
+        @click.stop>
             
             <div class="p-6 md:p-8">
                 {{-- Header --}}
@@ -72,5 +71,4 @@
                 </form>
             </div>
         </div>
-    </div>
 </div>

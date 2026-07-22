@@ -12,6 +12,7 @@ function lahanPantauPage() {
             deskripsi: ''
         },
         editingId: null,
+        sidebarOpen: false, // Add this for sidebar component
 
         async init() {
             await this.fetchLahans();
