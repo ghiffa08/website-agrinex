@@ -64,9 +64,8 @@ class LahanPantauController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'nama_lahan' => 'required|string|max:100',
-            'lokasi' => 'nullable|string|max:255',
+            'lokasi' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
-            'image_url' => 'nullable|url',
         ]);
 
         if ($validator->fails()) {

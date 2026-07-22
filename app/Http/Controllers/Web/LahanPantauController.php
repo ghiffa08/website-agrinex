@@ -24,9 +24,13 @@ class LahanPantauController extends Controller
      */
     public function show(int $id)
     {
-        return view('lahan-pantau.detail', [
-            'lahanId' => $id,
-            'pageTitle' => 'Detail Lahan Pantau - AgriNex',
+        $lahan = \App\Models\LahanPantau::findOrFail($id);
+        $devices = \App\Models\Device::where('lahan_pantau_id', $id)->get();
+        
+        return view('lahan-pantau.show', [
+            'lahan' => $lahan,
+            'devices' => $devices,
+            'pageTitle' => $lahan->nama_lahan . ' - Lahan Pantau',
             'pageDescription' => 'Detail monitoring lahan pertanian'
         ]);
     }

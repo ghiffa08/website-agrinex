@@ -32,29 +32,20 @@
             <div class="bg-neuBg rounded-[2rem] p-6 shadow-[8px_8px_16px_#a3b1c6,-8px_-8px_16px_#ffffff] hover:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] transition-all duration-300 cursor-pointer"
                 @click="viewDetail(lahan.id)">
                 
-                {{-- Image --}}
-                <div class="relative mb-4 rounded-2xl overflow-hidden h-40 bg-neuBg shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]">
-                    <template x-if="lahan.image_url">
-                        <img :src="lahan.image_url" :alt="lahan.nama_lahan" class="w-full h-full object-cover">
-                    </template>
-                    <template x-if="!lahan.image_url">
-                        <div class="w-full h-full flex items-center justify-center">
-                            <svg class="h-16 w-16 text-lightText" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-                            </svg>
-                        </div>
-                    </template>
-                </div>
-
                 {{-- Info --}}
-                <h3 class="text-lg font-bold text-darkText mb-2" x-text="lahan.nama_lahan"></h3>
-                <p class="text-sm text-lightText mb-3 flex items-center gap-2">
-                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span x-text="lahan.lokasi || 'Lokasi belum diatur'"></span>
-                </p>
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-bold text-darkText mb-2" x-text="lahan.nama_lahan"></h3>
+                        <p class="text-sm text-lightText mb-2 flex items-start gap-2">
+                            <svg class="h-4 w-4 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span x-text="lahan.lokasi || 'Lokasi belum diatur'"></span>
+                        </p>
+                        <p class="text-xs text-lightText line-clamp-2" x-text="lahan.deskripsi || 'Tidak ada deskripsi'"></p>
+                    </div>
+                </div>
 
                 {{-- Stats --}}
                 <div class="flex items-center justify-between pt-4 border-t border-[#a3b1c6]/30">

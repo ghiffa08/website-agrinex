@@ -1,17 +1,11 @@
 {{-- Modal Create/Edit Lahan --}}
 <div x-show="showModal" 
-    x-transition:enter="transition ease-out duration-300"
-    x-transition:enter-start="opacity-0"
-    x-transition:enter-end="opacity-100"
-    x-transition:leave="transition ease-in duration-200"
-    x-transition:leave-start="opacity-100"
-    x-transition:leave-end="opacity-0"
-    class="fixed inset-0 z-50 overflow-y-auto" 
-    style="display: none;">
+    x-cloak
+    class="fixed inset-0 z-50 overflow-y-auto">
     
     <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
         {{-- Background overlay --}}
-        <div class="fixed inset-0 transition-opacity bg-black bg-opacity-50" 
+        <div class="fixed inset-0 bg-black bg-opacity-50" 
             @click="closeModal"></div>
 
         {{-- Modal panel --}}
@@ -43,9 +37,10 @@
 
                     {{-- Lokasi --}}
                     <div>
-                        <label class="block text-sm font-semibold text-darkText mb-2">Lokasi</label>
+                        <label class="block text-sm font-semibold text-darkText mb-2">Lokasi *</label>
                         <input type="text" 
                             x-model="formData.lokasi" 
+                            required
                             placeholder="Contoh: Desa Sumberjo, Kec. Batu"
                             class="w-full px-4 py-3 rounded-xl bg-neuBg shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] border-none focus:outline-none focus:ring-2 focus:ring-brand text-darkText">
                     </div>
@@ -58,15 +53,6 @@
                             rows="3"
                             placeholder="Deskripsi lahan..."
                             class="w-full px-4 py-3 rounded-xl bg-neuBg shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] border-none focus:outline-none focus:ring-2 focus:ring-brand text-darkText resize-none"></textarea>
-                    </div>
-
-                    {{-- Image URL --}}
-                    <div>
-                        <label class="block text-sm font-semibold text-darkText mb-2">URL Gambar</label>
-                        <input type="url" 
-                            x-model="formData.image_url" 
-                            placeholder="https://example.com/image.jpg"
-                            class="w-full px-4 py-3 rounded-xl bg-neuBg shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] border-none focus:outline-none focus:ring-2 focus:ring-brand text-darkText">
                     </div>
 
                     {{-- Actions --}}

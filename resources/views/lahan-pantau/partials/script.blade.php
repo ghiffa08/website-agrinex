@@ -9,8 +9,7 @@ function lahanPantauPage() {
         formData: {
             nama_lahan: '',
             lokasi: '',
-            deskripsi: '',
-            image_url: ''
+            deskripsi: ''
         },
         editingId: null,
 
@@ -54,10 +53,10 @@ function lahanPantauPage() {
             this.formData = {
                 nama_lahan: '',
                 lokasi: '',
-                deskripsi: '',
-                image_url: ''
+                deskripsi: ''
             };
             this.showModal = true;
+            console.log('Modal opened, showModal:', this.showModal);
         },
 
         openEditModal(lahan) {
@@ -66,10 +65,10 @@ function lahanPantauPage() {
             this.formData = {
                 nama_lahan: lahan.nama_lahan,
                 lokasi: lahan.lokasi || '',
-                deskripsi: lahan.deskripsi || '',
-                image_url: lahan.image_url || ''
+                deskripsi: lahan.deskripsi || ''
             };
             this.showModal = true;
+            console.log('Edit modal opened, lahan:', lahan);
         },
 
         closeModal() {
