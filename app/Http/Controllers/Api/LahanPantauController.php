@@ -99,10 +99,9 @@ class LahanPantauController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'nama_lahan' => 'sometimes|string|max:100',
-            'lokasi' => 'nullable|string|max:255',
+            'nama_lahan' => 'required|string|max:100',
+            'lokasi' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
-            'image_url' => 'nullable|url',
         ]);
 
         if ($validator->fails()) {
