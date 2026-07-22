@@ -24,30 +24,29 @@
                 <span class="text-[9px] font-bold mt-0.5 leading-none">Beranda</span>
             </a>
 
-            {{-- Perangkat --}}
-            <a href="{{ route('agrinex.devices') }}" 
-                :class="'{{ request()->routeIs('agrinex.devices') || request()->routeIs('agrinex.node-detail') ? 'active' : '' }}' === 'active' ? 'bg-neuBg shadow-[inset_3px_3px_6px_#a3b1c6,inset_-3px_-3px_6px_#ffffff] text-brand' : 'text-lightText hover:text-brand active:shadow-[inset_3px_3px_6px_#a3b1c6,inset_-3px_-3px_6px_#ffffff]'"
+            {{-- Lahan Pantau --}}
+            <a href="{{ route('lahan-pantau.index') }}" 
+                :class="'{{ request()->routeIs('lahan-pantau.*') ? 'active' : '' }}' === 'active' ? 'bg-neuBg shadow-[inset_3px_3px_6px_#a3b1c6,inset_-3px_-3px_6px_#ffffff] text-brand' : 'text-lightText hover:text-brand active:shadow-[inset_3px_3px_6px_#a3b1c6,inset_-3px_-3px_6px_#ffffff]'"
                 class="flex flex-col items-center justify-center
                 w-14 h-12 rounded-xl
                 transition-all duration-200 active:scale-90">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
                 </svg>
-                <span class="text-[9px] font-bold mt-0.5 leading-none">Perangkat</span>
+                <span class="text-[9px] font-bold mt-0.5 leading-none">Lahan</span>
             </a>
 
-            {{-- FAB Center --}}
-            <button class="w-14 h-14 -mt-6 rounded-2xl bg-neuBg
-                flex items-center justify-center
-                shadow-[6px_6px_12px_#a3b1c6,-6px_-6px_12px_#ffffff]
-                text-brand
-                active:shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff]
-                transition-all duration-200 active:scale-90
-                flex-shrink-0">
-                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+            {{-- Flasher --}}
+            <a href="{{ route('flasher.index') }}" 
+                :class="'{{ request()->routeIs('flasher.*') ? 'active' : '' }}' === 'active' ? 'bg-neuBg shadow-[inset_3px_3px_6px_#a3b1c6,inset_-3px_-3px_6px_#ffffff] text-brand' : 'text-lightText hover:text-brand active:shadow-[inset_3px_3px_6px_#a3b1c6,inset_-3px_-3px_6px_#ffffff]'"
+                class="flex flex-col items-center justify-center
+                w-14 h-12 rounded-xl
+                transition-all duration-200 active:scale-90">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                 </svg>
-            </button>
+                <span class="text-[9px] font-bold mt-0.5 leading-none">Flasher</span>
+            </a>
 
             {{-- Laporan --}}
             <a href="{{ route('reports.index') }}"

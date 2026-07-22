@@ -63,10 +63,6 @@ return new class extends Migration
      */
     private function indexExists(string $table, string $index): bool
     {
-        $connection = Schema::getConnection();
-        $doctrineSchemaManager = $connection->getDoctrineSchemaManager();
-        $doctrineTable = $doctrineSchemaManager->introspectTable($table);
-        
-        return $doctrineTable->hasIndex($index);
+        return Schema::hasIndex($table, $index);
     }
 };
