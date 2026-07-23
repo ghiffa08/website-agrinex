@@ -100,7 +100,8 @@ self.addEventListener('fetch', (event) => {
     }
     
     // HTML pages - Network First with cache fallback
-    if (request.headers.get('accept').includes('text/html')) {
+    const acceptHeader = request.headers.get('accept') || '';
+    if (acceptHeader.includes('text/html')) {
         event.respondWith(
             networkFirstStrategy(request, CACHE_DYNAMIC)
         );
@@ -118,6 +119,7 @@ self.addEventListener('fetch', (event) => {
  * Try cache first, if miss then fetch from network and cache
  */
 async function cacheFirstStrategy(request, cacheName) {
+    const acceptHeader = request.headers.get('accept') || '';
     try {
         // Try cache first
         const cachedResponse = await caches.match(request);
@@ -145,11 +147,19 @@ async function cacheFirstStrategy(request, cacheName) {
         }
         
         // Return offline page for HTML requests
-        if (request.headers.get('accept').includes('text/html')) {
-            return caches.match('/offline.html');
+        if (acceptHeader.includes('text/html')) {
+            const offlineResp = await caches.match('/offline.html');
+            if (offlineResp) return offlineResp;
+            return new Response('<h1>Offline</h1><p>Tidak ada koneksi internet.</p>', {
+                status: 503,
+                headers: { 'Content-Type': 'text/html; charset=utf-8' }
+            });
         }
         
-        throw error;
+        return new Response(JSON.stringify({ error: 'Network error' }), {
+            status: 503,
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
 }
 
@@ -158,6 +168,7 @@ async function cacheFirstStrategy(request, cacheName) {
  * Try network first, if fail then use cache
  */
 async function networkFirstStrategy(request, cacheName) {
+    const acceptHeader = request.headers.get('accept') || '';
     try {
         // Try network first
         const networkResponse = await fetch(request.clone());
@@ -197,20 +208,31 @@ async function networkFirstStrategy(request, cacheName) {
                     
                     if (now - cachedTime > API_CACHE_DURATION) {
                         console.warn('[SW] API cache expired');
-                        throw new Error('Cache expired');
+                    } else {
+                        return cachedResponse;
                     }
+                } else {
+                    return cachedResponse;
                 }
+            } else {
+                return cachedResponse;
             }
-            
-            return cachedResponse;
         }
         
         // No cache available - return offline page for HTML
-        if (request.headers.get('accept').includes('text/html')) {
-            return caches.match('/offline.html');
+        if (acceptHeader.includes('text/html')) {
+            const offlineResp = await caches.match('/offline.html');
+            if (offlineResp) return offlineResp;
+            return new Response('<h1>Offline</h1><p>Tidak ada koneksi internet.</p>', {
+                status: 503,
+                headers: { 'Content-Type': 'text/html; charset=utf-8' }
+            });
         }
         
-        throw error;
+        return new Response(JSON.stringify({ error: 'Offline' }), {
+            status: 503,
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
 }
 

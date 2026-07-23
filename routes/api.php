@@ -27,9 +27,9 @@ use App\Http\Controllers\Api\LahanPantauController;
 Route::post('/telemetry', [TelemetryApiController::class, 'store'])
     ->middleware(['throttle:120,1', 'iot.api']);
 Route::get('/nodes/config', [\App\Http\Controllers\Api\NodeConfigController::class, 'getConfig'])
-    ->middleware('throttle:60,1');
+    ->middleware('throttle:120,1');
 Route::post('/nodes/config', [\App\Http\Controllers\Api\NodeConfigController::class, 'updateConfig'])
-    ->middleware(['throttle:10,1']);
+    ->middleware(['throttle:60,1']);
 Route::prefix('v1')->group(function () {
     
     // Data Ingestion Endpoints (NEW - for IoT devices)

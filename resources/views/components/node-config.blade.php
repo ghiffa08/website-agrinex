@@ -11,6 +11,11 @@
         </button>
     </div>
 
+    <div x-show="errorMessage" x-cloak class="mb-4 p-3 rounded-xl bg-red-100 border border-red-300 text-red-700 text-xs font-semibold flex justify-between items-center">
+        <span x-text="errorMessage"></span>
+        <button @click="errorMessage = null" class="text-red-500 hover:text-red-700 font-bold ml-2">&times;</button>
+    </div>
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Mode Toggle -->
         <div class="bg-neuBg rounded-[2rem] p-6 shadow-[8px_8px_16px_#a3b1c6,-8px_-8px_16px_#ffffff] flex flex-col gap-4">
@@ -63,10 +68,12 @@ document.addEventListener('alpine:init', () => {
             valve: 'OFF'
         },
         loading: false,
+        isUpdating: false,
+        errorMessage: null,
         init() {
             this.fetchConfig();
             
-            // Poll for external updates every 30 seconds (instead of 5s to avoid rate limit)
+            // Poll for external updates every 30 seconds
             setInterval(() => {
                 this.fetchConfig(true);
             }, 30000);
@@ -86,8 +93,15 @@ document.addEventListener('alpine:init', () => {
             }
         },
         async updateConfig(newMode, newValve) {
+            if (this.isUpdating) return; // Prevent concurrent requests
+            
             if (this.config.mode === 'auto' && newMode !== 'manual' && newValve !== this.config.valve) {
                 // If it's auto, we don't allow valve changes
+                return;
+            }
+
+            // Don't send request if values haven't changed
+            if (this.config.mode === newMode && this.config.valve === newValve) {
                 return;
             }
             
@@ -95,6 +109,8 @@ document.addEventListener('alpine:init', () => {
             const oldConfig = { ...this.config };
             this.config = { mode: newMode, valve: newValve };
             this.loading = true;
+            this.isUpdating = true;
+            this.errorMessage = null;
             
             try {
                 const response = await fetch('/api/nodes/config', {
@@ -112,6 +128,10 @@ document.addEventListener('alpine:init', () => {
                         this.config = data.data;
                     }
                 } else {
+                    if (response.status === 429) {
+                        this.errorMessage = 'Terlalu banyak permintaan. Harap tunggu beberapa detik.';
+                        console.warn('Rate limit exceeded (429)');
+                    }
                     // Revert if failed
                     this.config = oldConfig;
                 }
@@ -120,6 +140,7 @@ document.addEventListener('alpine:init', () => {
                 this.config = oldConfig; // Revert if failed
             } finally {
                 this.loading = false;
+                this.isUpdating = false;
             }
         }
     }));

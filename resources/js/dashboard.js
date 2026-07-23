@@ -5,6 +5,7 @@
 function dashboard() {
     return {
         // --- State ---
+        currentView: window.location.hash === '#profile' ? 'profile' : 'dashboard',
         currentLang: localStorage.getItem('sis_lang') || 'id',
         darkMode: localStorage.getItem('sis_dark') === '1',
         sidebarOpen: false,
@@ -123,6 +124,9 @@ function dashboard() {
         },
 
         init() {
+            window.addEventListener('hashchange', () => {
+                this.currentView = window.location.hash === '#profile' ? 'profile' : 'dashboard';
+            });
             this.applyPersistedTheme();
             document.title = this.t('appTitle');
             this.startClock();

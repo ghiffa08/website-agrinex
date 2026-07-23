@@ -9,12 +9,9 @@
 <body x-data="dashboard()"
     class="h-full min-h-screen w-full bg-neuBg text-darkText font-sans antialiased selection:bg-brand selection:text-white relative overflow-x-hidden">
 
-    <div class="min-h-screen w-full bg-neuBg font-sans text-darkText" x-data="{ currentView: window.location.hash === '#profile' ? 'profile' : 'dashboard' }" @hashchange.window="currentView = window.location.hash === '#profile' ? 'profile' : 'dashboard'">
-
     {{-- Global Splash Screen --}}
     @include('components.splash')
 
-    <div class="min-h-screen w-full bg-neuBg font-sans text-darkText" x-data="{ currentView: window.location.hash === '#profile' ? 'profile' : 'dashboard' }" @hashchange.window="currentView = window.location.hash === '#profile' ? 'profile' : 'dashboard'">
     <div class="relative z-10 flex h-full min-h-screen">
 
         {{-- Sidebar — hidden on mobile, sticky on desktop --}}
@@ -257,8 +254,6 @@
     @include('components.bottom-nav')
 
     @include('components.modals')
-
-    </div>
 
 </body>
 </html>
