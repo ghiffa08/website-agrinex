@@ -71,6 +71,11 @@ self.addEventListener('fetch', (event) => {
         return;
     }
     
+    // Skip OAuth routes (Google/social login redirects)
+    if (url.pathname.startsWith('/auth/')) {
+        return; // Let browser handle OAuth naturally
+    }
+    
     // API requests - Network First with cache fallback
     if (url.pathname.startsWith('/api/')) {
         event.respondWith(
@@ -155,7 +160,7 @@ async function cacheFirstStrategy(request, cacheName) {
 async function networkFirstStrategy(request, cacheName) {
     try {
         // Try network first
-        const networkResponse = await fetch(request);
+        const networkResponse = await fetch(request.clone());
         
         // Cache successful response
         if (networkResponse.ok) {
@@ -174,7 +179,10 @@ async function networkFirstStrategy(request, cacheName) {
         
         return networkResponse;
     } catch (error) {
-        console.warn('[SW] Network failed, trying cache:', error);
+        // Only log if it's not a common network error
+        if (!(error instanceof TypeError)) {
+            console.warn('[SW] Network failed, trying cache:', error);
+        }
         
         // Network failed - try cache
         const cachedResponse = await caches.match(request);

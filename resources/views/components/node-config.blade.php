@@ -66,10 +66,10 @@ document.addEventListener('alpine:init', () => {
         init() {
             this.fetchConfig();
             
-            // Poll for external updates every 5 seconds just in case
+            // Poll for external updates every 30 seconds (instead of 5s to avoid rate limit)
             setInterval(() => {
                 this.fetchConfig(true);
-            }, 5000);
+            }, 30000);
         },
         async fetchConfig(silent = false) {
             if (!silent) this.loading = true;

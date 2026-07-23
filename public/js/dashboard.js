@@ -18,6 +18,9 @@ function dashboard() {
         loadingCharts: true,
         fetchError: false,
         lastUpdated: null,
+        toastMessage: '',
+        toastType: 'error',
+        showToast: false,
 
         devices: [],
         weatherSummary: {},
