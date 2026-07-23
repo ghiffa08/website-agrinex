@@ -5,6 +5,7 @@
 function dashboard() {
     return {
         // --- State ---
+        currentView: window.location.hash === '#profile' ? 'profile' : 'dashboard',
         currentLang: localStorage.getItem('sis_lang') || 'id',
         darkMode: localStorage.getItem('sis_dark') === '1',
         sidebarOpen: false,
@@ -114,13 +115,23 @@ function dashboard() {
             },
         },
 
-        // --- Init ---
+        // --- Toast Notification ---
+        displayToast(message, type = 'error') {
+            this.toastMessage = message;
+            this.toastType = type;
+            this.showToast = true;
+            setTimeout(() => { this.showToast = false; }, 5000);
+        },
+
         init() {
+            window.addEventListener('hashchange', () => {
+                this.currentView = window.location.hash === '#profile' ? 'profile' : 'dashboard';
+            });
             this.applyPersistedTheme();
             document.title = this.t('appTitle');
             this.startClock();
             this.loadEssential();
-            this.loadSecondary();
+            this.loadSecondary(); // Added this to fetch usage and tank data on load
             this.startPolling();
             
             // Initialize street map after DOM is ready
@@ -207,7 +218,10 @@ function dashboard() {
                 this.lastUpdated = new Date();
                 this.loadingAll = false;
                 this.loadingCharts = false;
-            } catch (_) { this.fetchError = true; }
+            } catch (err) { 
+                this.fetchError = true;
+                this.displayToast('Gagal memuat data awal: ' + (err.message || 'Network error'), 'error');
+            }
         },
 
         async loadSecondary() {
@@ -284,7 +298,10 @@ function dashboard() {
                     lahan_pantau_name: d.lahan_pantau_name,
                 }));
                 this.computeTopMetrics();
-            } catch (_) { this.fetchError = true; }
+            } catch (err) { 
+                this.fetchError = true;
+                this.displayToast('Gagal memuat data devices: ' + (err.message || 'Network error'), 'error');
+            }
             finally { this.loadingDevices = false; }
         },
 
@@ -682,6 +699,17 @@ function dashboard() {
             const ctx = document.getElementById('usageChart30d');
             if (!ctx) return;
             if (this.usageChart) this.usageChart.destroy();
+            
+            if (!this.usage || this.usage.length === 0) {
+                const canvas = ctx.getContext('2d');
+                canvas.clearRect(0, 0, ctx.width, ctx.height);
+                canvas.font = '14px sans-serif';
+                canvas.fillStyle = '#9ca3af';
+                canvas.textAlign = 'center';
+                canvas.fillText('Belum ada data penggunaan 30 hari', ctx.width / 2, ctx.height / 2);
+                return;
+            }
+            
             const labels = this.usage.map(u => u.date);
             const data = this.usage.map(u => u.total_l);
             this.usageChart = new Chart(ctx, {
@@ -694,6 +722,17 @@ function dashboard() {
             const ctx = document.getElementById('usageChart24h');
             if (!ctx) return;
             if (this.usageChart24h) this.usageChart24h.destroy();
+            
+            if (!this.usage24h || this.usage24h.length === 0) {
+                const canvas = ctx.getContext('2d');
+                canvas.clearRect(0, 0, ctx.width, ctx.height);
+                canvas.font = '14px sans-serif';
+                canvas.fillStyle = '#9ca3af';
+                canvas.textAlign = 'center';
+                canvas.fillText('Belum ada data 24 jam terakhir', ctx.width / 2, ctx.height / 2);
+                return;
+            }
+            
             const labels = this.usage24h.map(u => u.hour);
             const data = this.usage24h.map(u => u.total_l);
             this.usageChart24h = new Chart(ctx, {
