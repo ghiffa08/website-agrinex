@@ -35,34 +35,9 @@ return [
         ],
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | BMKG Weather API Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Configuration for BMKG (Badan Meteorologi, Klimatologi, dan Geofisika)
-    | weather API integration. Location code determines the forecast area.
-    |
-    */
-
-    'bmkg' => [
-        'api_url' => env('BMKG_API_URL', 'https://api.bmkg.go.id/publik/prakiraan-cuaca'),
-        'location_code' => env('BMKG_LOCATION_CODE', '501227'), // Default: Kuningan, Jawa Barat (adjust to your location)
-        'timeout' => env('BMKG_API_TIMEOUT', 10), // seconds
-        
-        // Location codes reference (Indonesia):
-        // 501297 = DKI Jakarta
-        // 501271 = Bandung, Jawa Barat
-        // 501212 = Surabaya, Jawa Timur
-        // 501128 = Semarang, Jawa Tengah
-        // 501153 = Yogyakarta
-        // Check https://api.bmkg.go.id for your area code
-    ],
-
-    'google' => [
-        'client_id' => env('GOOGLE_CLIENT_ID'),
-        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect' => env('GOOGLE_REDIRECT_URI', env('APP_URL') . '/auth/google/callback'),
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+        'model' => env('GEMINI_MODEL', 'gemini-1.5-flash'),
     ],
 
 ];

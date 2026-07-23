@@ -54,6 +54,9 @@
         @include('lahan-pantau.partials.modal')
     </div>
 
+    <script>
+        window.allDevices = @json($allDevices ?? []);
+    </script>
     @include('lahan-pantau.partials.script')
 
 </body>

@@ -7,7 +7,7 @@
 <body class="h-full min-h-screen w-full bg-neuBg text-darkText font-sans antialiased">
 
     <div class="min-h-screen w-full bg-neuBg font-sans text-darkText">
-        <div class="relative z-10 flex h-full min-h-screen" x-cloak>
+        <div class="relative z-10 flex h-full min-h-screen">
             {{-- Sidebar --}}
             <div class="hidden md:flex md:flex-shrink-0">
                 @include('components.sidebar')

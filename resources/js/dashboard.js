@@ -122,12 +122,12 @@ function dashboard() {
             setTimeout(() => { this.showToast = false; }, 5000);
         },
 
-        // --- Init ---
         init() {
             this.applyPersistedTheme();
             document.title = this.t('appTitle');
             this.startClock();
             this.loadEssential();
+            this.loadSecondary(); // Added this to fetch usage and tank data on load
             this.startPolling();
             
             // Initialize street map after DOM is ready
@@ -692,7 +692,7 @@ function dashboard() {
 
         // --- Usage Charts ---
         renderUsageChart30d() {
-            const ctx = document.getElementById('usageChart');
+            const ctx = document.getElementById('usageChart30d');
             if (!ctx) return;
             if (this.usageChart) this.usageChart.destroy();
             

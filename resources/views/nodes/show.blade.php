@@ -36,7 +36,8 @@
         </div>
         <div>
             @can('role', ['admin', 'operator'])
-                <a href="{{ route('nodes.edit', $node->id) }}" class="btn btn-primary">
+                @include('nodes.partials.ai-calibration-modal')
+                <a href="{{ route('nodes.edit', $node->id) }}" class="btn btn-primary ms-2">
                     <i class="bi bi-pencil"></i> Edit Node
                 </a>
             @endcan

@@ -35,4 +35,9 @@ class Device extends Model
     {
         return $this->belongsTo(LahanPantau::class);
     }
+
+    public function irrigationLogs()
+    {
+        return $this->hasMany(IrrigationLog::class);
+    }
 }

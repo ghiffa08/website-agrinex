@@ -66,6 +66,8 @@ class LahanPantauController extends Controller
             'nama_lahan' => 'required|string|max:100',
             'lokasi' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
+            'device_ids' => 'nullable|array',
+            'device_ids.*' => 'integer|exists:devices,id',
         ]);
 
         if ($validator->fails()) {
@@ -102,6 +104,8 @@ class LahanPantauController extends Controller
             'nama_lahan' => 'required|string|max:100',
             'lokasi' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
+            'device_ids' => 'nullable|array',
+            'device_ids.*' => 'integer|exists:devices,id',
         ]);
 
         if ($validator->fails()) {

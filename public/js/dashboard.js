@@ -117,6 +117,7 @@ function dashboard() {
             document.title = this.t('appTitle');
             this.startClock();
             this.loadEssential();
+            this.loadSecondary();
             this.startPolling();
             
             // Initialize street map after DOM is ready
@@ -675,7 +676,7 @@ function dashboard() {
 
         // --- Usage Charts ---
         renderUsageChart30d() {
-            const ctx = document.getElementById('usageChart');
+            const ctx = document.getElementById('usageChart30d');
             if (!ctx) return;
             if (this.usageChart) this.usageChart.destroy();
             const labels = this.usage.map(u => u.date);

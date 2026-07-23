@@ -54,6 +54,25 @@
                             class="w-full px-4 py-3 rounded-xl bg-neuBg shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] border-none focus:outline-none focus:ring-2 focus:ring-brand text-darkText resize-none"></textarea>
                     </div>
 
+                    {{-- Daftar Perangkat --}}
+                    <div>
+                        <label class="block text-sm font-semibold text-darkText mb-2">Daftar Perangkat (Node)</label>
+                        <div class="bg-neuBg shadow-[inset_4px_4px_8px_#a3b1c6,inset_-4px_-4px_8px_#ffffff] rounded-xl p-4 max-h-48 overflow-y-auto space-y-2">
+                            <template x-for="device in availableDevices" :key="device.id">
+                                <label class="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-gray-100/50 transition-colors">
+                                    <input type="checkbox" :value="device.id" x-model="formData.device_ids"
+                                        class="w-5 h-5 rounded text-brand focus:ring-brand border-gray-300">
+                                    <div class="flex-1">
+                                        <p class="text-sm font-semibold text-darkText" x-text="device.device_name || device.name"></p>
+                                    </div>
+                                </label>
+                            </template>
+                            <template x-if="availableDevices.length === 0">
+                                <p class="text-sm text-lightText text-center py-2">Tidak ada perangkat yang tersedia</p>
+                            </template>
+                        </div>
+                    </div>
+
                     {{-- Actions --}}
                     <div class="flex gap-3 pt-4">
                         <button type="button" 

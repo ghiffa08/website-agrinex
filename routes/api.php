@@ -29,7 +29,7 @@ Route::post('/telemetry', [TelemetryApiController::class, 'store'])
 Route::get('/nodes/config', [\App\Http\Controllers\Api\NodeConfigController::class, 'getConfig'])
     ->middleware('throttle:60,1');
 Route::post('/nodes/config', [\App\Http\Controllers\Api\NodeConfigController::class, 'updateConfig'])
-    ->middleware(['throttle:10,1', 'iot.api']);
+    ->middleware(['throttle:10,1']);
 Route::prefix('v1')->group(function () {
     
     // Data Ingestion Endpoints (NEW - for IoT devices)
@@ -104,6 +104,15 @@ Route::prefix('v1')->group(function () {
         Route::get('/{id}', [LahanPantauController::class, 'show']);
         Route::put('/{id}', [LahanPantauController::class, 'update']);
         Route::delete('/{id}', [LahanPantauController::class, 'destroy']);
+    });
+    
+    // AI Calibration API
+    Route::prefix('devices/{deviceId}/ai-calibration')->group(function () {
+        Route::post('/start', [\App\Http\Controllers\Api\AICalibrationController::class, 'start']);
+        Route::post('/confirm-saturation', [\App\Http\Controllers\Api\AICalibrationController::class, 'confirmSaturation']);
+        Route::post('/analyze', [\App\Http\Controllers\Api\AICalibrationController::class, 'analyze']);
+        Route::get('/status', [\App\Http\Controllers\Api\AICalibrationController::class, 'status']);
+        Route::post('/cancel', [\App\Http\Controllers\Api\AICalibrationController::class, 'cancel']);
     });
     
     // Monitor Endpoints

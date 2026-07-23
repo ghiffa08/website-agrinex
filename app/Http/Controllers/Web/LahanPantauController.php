@@ -13,9 +13,11 @@ class LahanPantauController extends Controller
      */
     public function index()
     {
+        $allDevices = \App\Models\Device::select('id', 'name', 'lahan_pantau_id')->get();
         return view('lahan-pantau.index', [
             'pageTitle' => 'Lahan Pantau - AgriNex',
-            'pageDescription' => 'Kelola dan monitor area lahan pertanian Anda'
+            'pageDescription' => 'Kelola dan monitor area lahan pertanian Anda',
+            'allDevices' => $allDevices,
         ]);
     }
 

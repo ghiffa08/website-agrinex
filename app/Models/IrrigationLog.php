@@ -25,4 +25,9 @@ class IrrigationLog extends Model
     {
         return $this->hasMany(ValveLog::class);
     }
+
+    public function device()
+    {
+        return $this->belongsTo(Device::class);
+    }
 }

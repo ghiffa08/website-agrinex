@@ -63,6 +63,7 @@ return new class extends Migration
      */
     private function indexExists(string $table, string $index): bool
     {
-        return Schema::hasIndex($table, $index);
+        $indexes = \Illuminate\Support\Facades\DB::select("SHOW INDEX FROM `{$table}` WHERE Key_name = '{$index}'");
+        return count($indexes) > 0;
     }
 };

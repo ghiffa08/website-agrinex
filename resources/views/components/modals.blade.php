@@ -4,7 +4,7 @@
     @keydown.escape.window="closeDeviceModal()" style="z-index: 9999 !important;">
     
     <!-- Backdrop overlay -->
-    <div class="fixed inset-0 bg-neuBg/60 backdrop-blur-sm" @click="closeDeviceModal()"></div>
+    <div class="fixed inset-0 bg-black/50" @click="closeDeviceModal()"></div>
 
     <!-- Modal Container -->
     <div x-show="showDeviceModal" x-transition.opacity x-transition.scale.origin.top

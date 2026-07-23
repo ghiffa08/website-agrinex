@@ -123,6 +123,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Reports
     Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index');
+    Route::post('/reports/export', [ReportsController::class, 'export'])->name('reports.export');
     Route::get('/reports/node/{nodeId}', [ReportsController::class, 'byNode'])->name('reports.by-node');
     Route::get('/reports/export/pdf', [ReportsController::class, 'exportPdf'])->name('reports.export.pdf');
     });

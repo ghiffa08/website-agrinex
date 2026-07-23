@@ -9,8 +9,10 @@ function lahanPantauPage() {
         formData: {
             nama_lahan: '',
             lokasi: '',
-            deskripsi: ''
+            deskripsi: '',
+            device_ids: []
         },
+        availableDevices: window.allDevices || [],
         editingId: null,
         sidebarOpen: false, // Add this for sidebar component
 
@@ -54,7 +56,8 @@ function lahanPantauPage() {
             this.formData = {
                 nama_lahan: '',
                 lokasi: '',
-                deskripsi: ''
+                deskripsi: '',
+                device_ids: []
             };
             this.showModal = true;
             console.log('Modal opened, showModal:', this.showModal);
@@ -66,7 +69,8 @@ function lahanPantauPage() {
             this.formData = {
                 nama_lahan: lahan.nama_lahan,
                 lokasi: lahan.lokasi || '',
-                deskripsi: lahan.deskripsi || ''
+                deskripsi: lahan.deskripsi || '',
+                device_ids: lahan.device_ids || []
             };
             this.showModal = true;
             console.log('Edit modal opened, lahan:', lahan);
